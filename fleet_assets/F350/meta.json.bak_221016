@@ -1,0 +1,62 @@
+{
+    "vehicle": "F350",
+    "total_images": 14,
+    "assets": [
+        {
+            "file": "01_F350.jpg",
+            "description": "This is the interior of a camper or motorhome conversion built on the 2006 Ford F350 chassis. The view shows the main living area, focusing on the sofa, overhead bunk/storage, and the entertainment center with an electric fireplace."
+        },
+        {
+            "file": "02_F350.jpg",
+            "description": "This is an interior view of the dinette area within the vehicle's living quarters or camper section. The image features the booth seating, table, and overhead light fixture."
+        },
+        {
+            "file": "03_F350.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile banking application displaying a list of financial transactions."
+        },
+        {
+            "file": "04_F350.jpg",
+            "description": "This image displays a screenshot of a mobile banking application showing a list of financial transactions. No part of a vehicle is visible in the image provided."
+        },
+        {
+            "file": "04_F350_Seats.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile phone's screen displaying a payment transaction history."
+        },
+        {
+            "file": "05_F350.jpg",
+            "description": "This is a low-angle view of a deployed trailer or camper landing gear leg. The image details the adjustable support column, its circular footplate resting on the ground, and the mounting bracket bolted to the vehicle's underframe."
+        },
+        {
+            "file": "06_F350.jpg",
+            "description": "This image shows the interior of a fifth-wheel trailer or truck camper, specifically the kitchen galley. The perspective is from the main living space, looking towards the sink, stove, and an open entry door, with steps leading to a raised bedroom area in the background."
+        },
+        {
+            "file": "07_F350.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile phone screen displaying a payment transaction history."
+        },
+        {
+            "file": "07_F350_Tires.jpg",
+            "description": "This is a low-angle, close-up view of the rear chassis frame rail and the underside of the vehicle's body. The image highlights the condition of the frame, including some surface rust, with the rear wheels and ground visible underneath."
+        },
+        {
+            "file": "08_F350.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile phone displaying a digital payment confirmation screen."
+        },
+        {
+            "file": "08_F350_Grille.jpg",
+            "description": "Exterior view of an open side utility compartment housing the vehicle's house battery box. The bay contains the battery, wiring for the rear camera system, and provides access to other vehicle systems like the propane tank."
+        },
+        {
+            "file": "09_F350.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile payment application on a smartphone."
+        },
+        {
+            "file": "09_F350_Extra.jpg",
+            "description": "This is a view of the vehicle's interior from the rear passenger side, looking forward. The image highlights the tan leather rear bench seat and shows the backs of the two front bucket seats."
+        },
+        {
+            "file": "13_F350.jpg",
+            "description": "This is an interior view from the rear passenger cabin, looking towards the front of the vehicle. The image highlights the tan leather rear bench seat, with the front seats and dashboard visible in the background."
+        }
+    ]
+}

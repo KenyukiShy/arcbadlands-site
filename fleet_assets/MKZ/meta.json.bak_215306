@@ -1,0 +1,22 @@
+{
+    "vehicle": "MKZ",
+    "total_images": 4,
+    "assets": [
+        {
+            "file": "01_MKZ.jpg",
+            "description": "This is a front three-quarter view of the vehicle from the driver's side. The image highlights the front bumper, grille, headlights, and driver's side front fender and wheel."
+        },
+        {
+            "file": "01_MKZ_Exterior_Front.jpg",
+            "description": "This is a front three-quarter view of the vehicle from the driver's side. The image captures the front fascia, including the grille and headlight, as well as the driver's side profile and front wheel."
+        },
+        {
+            "file": "03_MKZ.jpg",
+            "description": "This is a driver's side interior view, capturing the cockpit from an angle behind the steering wheel. The image prominently displays the dashboard, center console, instrument panel, and the black leather front seats."
+        },
+        {
+            "file": "03_MKZ_Driver_Gauges.jpg",
+            "description": "This is an interior view of the front cabin from the driver's side. The perspective highlights the driver's seat, steering wheel, dashboard, and the unique layout of the center console."
+        }
+    ]
+}

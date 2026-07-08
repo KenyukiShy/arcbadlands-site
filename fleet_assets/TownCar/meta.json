@@ -1,0 +1,86 @@
+{
+    "vehicle": "TownCar",
+    "total_images": 20,
+    "assets": [
+        {
+            "file": "01_TownCar_Front_34_Driver.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "02_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "02_TownCar_Front.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "03_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "03_TownCar_Side_Profile.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "04_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "04_TownCar_Rear_34_Passenger.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "05_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "05_TownCar_Rear.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "06_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "06_TownCar_Wheel_Detail.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "07_TownCar_Interior_Cabin.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "08_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "09_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "10_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "10_TownCar_Door_Controls.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "11_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "11_TownCar_Center_Stack.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "12_TC.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "12_TownCar_Headlight_Detail.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        }
+    ]
+}

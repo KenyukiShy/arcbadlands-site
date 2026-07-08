@@ -1,0 +1,118 @@
+{
+    "vehicle": "Jayco",
+    "total_images": 28,
+    "assets": [
+        {
+            "file": "01_Camper_Exterior_Rear_Angle.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "01_Jayco.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "01_Towing_Setup.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "02_Camper_Exterior_Entry.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "02_Jayco.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "02_Jayco_Entry.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "03_Jayco.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "04_Jayco.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "05_Jayco.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "06_Jayco.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "06_Jayco_Bunks.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "07_Towing_Setup.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "08_Jayco.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "08_Jayco_Rear.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "10_Jayco.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "11_Jayco_Fireplace.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "12_Jayco_Bunks.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "13_Jayco_Bed.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "13_TC_Interior.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "14_Jayco_Panel.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "14_TC_Interior.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "15_Jayco_Jacks.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "15_TC_Interior.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "16_Jayco_Seals.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "16_TC_Interior.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "17_Jayco_Underside.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "17_TC_Lounge.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "18_TC_Bedroom.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        }
+    ]
+}

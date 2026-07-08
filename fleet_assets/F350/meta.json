@@ -1,0 +1,62 @@
+{
+    "vehicle": "F350",
+    "total_images": 14,
+    "assets": [
+        {
+            "file": "01_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "02_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "03_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "04_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "04_F350_Seats.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "05_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "06_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "07_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "07_F350_Tires.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "08_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "08_F350_Grille.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "09_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "09_F350_Extra.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        },
+        {
+            "file": "13_F350.jpg",
+            "description": "PENDING_VERTEX_ANALYSIS"
+        }
+    ]
+}

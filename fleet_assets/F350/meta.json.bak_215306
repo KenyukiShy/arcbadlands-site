@@ -1,0 +1,74 @@
+{
+    "vehicle": "F350",
+    "total_images": 17,
+    "assets": [
+        {
+            "file": "01_F350.jpg",
+            "description": "Based on the provided context, this image displays the interior of a custom aftermarket camper conversion built for or installed on the 2006 Ford F350. The view highlights the main living quarters, showing the sofa opposite the entertainment center and fireplace."
+        },
+        {
+            "file": "02_F350.jpg",
+            "description": "This image shows the interior dinette booth and table within a truck camper or recreational vehicle attachment. These living quarters are not a standard feature of the truck cab itself but are designed to be carried or towed by the specified vehicle."
+        },
+        {
+            "file": "03_F350.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile banking app displaying a list of financial transactions."
+        },
+        {
+            "file": "04_F350.jpg",
+            "description": "This image does not show any part of a 2006 Ford F350. The image displays a screenshot of an online banking transaction history from United Community bank."
+        },
+        {
+            "file": "04_F350_Seats.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile phone screen displaying a payment history log."
+        },
+        {
+            "file": "05_F350.jpg",
+            "description": "This is a view of the front landing gear leg of a fifth-wheel or gooseneck trailer, which would be towed by the Ford F350. The image shows the adjustable support jack extended to level and support the trailer while it is unhitched."
+        },
+        {
+            "file": "06_F350.jpg",
+            "description": "This is an interior view of the camper/motorhome body, focusing on the kitchen galley. The perspective is from the main living area, looking past the sink and stovetop towards steps leading to a separate, raised room."
+        },
+        {
+            "file": "07_F350.jpg",
+            "description": "This image does not show any component of a vehicle. It is a digital screenshot of a mobile phone screen displaying a payment transaction history."
+        },
+        {
+            "file": "07_F350_Tires.jpg",
+            "description": "This is a low-angle view from underneath the rear of the vehicle, focusing on the chassis frame. The image highlights the rusty surface of the frame rail, with the vehicle's bodywork and a red taillight visible above it."
+        },
+        {
+            "file": "08_F350.jpg",
+            "description": "No part of the vehicle is visible in the image. The image displays a screenshot of a digital payment receipt for a transaction."
+        },
+        {
+            "file": "08_F350_Grille.jpg",
+            "description": "This is an exterior side service compartment of a motorhome, showing the house battery box in the foreground. A propane tank is also visible in the background of the compartment."
+        },
+        {
+            "file": "09_F350.jpg",
+            "description": "This image does not show a part of a vehicle. It is a screenshot of a mobile phone's screen displaying a payment application interface."
+        },
+        {
+            "file": "09_F350_Extra.jpg",
+            "description": "This is a view of the rear passenger cabin, taken from the rear passenger's side looking forward into the vehicle. The image prominently displays the tan leather rear bench seat and the backs of the front bucket seats."
+        },
+        {
+            "file": "10_F350.jpg",
+            "description": "This image does not show a part of a 2006 Ford F350. The image is a screenshot of a mobile phone screen displaying a payment application."
+        },
+        {
+            "file": "11_F350.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile banking application, displaying a list of recent transactions."
+        },
+        {
+            "file": "12_F350.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of an email from an auto transport company regarding a different vehicle, a 2016 Lincoln MKZ Hybrid."
+        },
+        {
+            "file": "13_F350.jpg",
+            "description": "This is a view of the rear passenger cabin, taken from the rear passenger's side looking diagonally toward the front of the vehicle. The image prominently features the tan leather rear bench seat and shows the backs of the front captain's chairs."
+        }
+    ]
+}

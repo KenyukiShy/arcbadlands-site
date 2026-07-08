@@ -1,0 +1,34 @@
+{
+    "vehicle": "MKZ",
+    "total_images": 7,
+    "assets": [
+        {
+            "file": "01_MKZ.jpg",
+            "description": "This is a driver-side front three-quarter view of the vehicle. The image captures the front grille, driver-side headlight, hood, and front wheel."
+        },
+        {
+            "file": "01_MKZ_Exterior_Front.jpg",
+            "description": "This is a driver's side front three-quarter view of the vehicle. The image shows the front fascia including the grille and headlights, along with the hood and driver's side front fender and wheel."
+        },
+        {
+            "file": "03_MKZ.jpg",
+            "description": "This is a driver's side interior view showing the steering wheel, dashboard, and center console. The image provides a comprehensive look at the front cabin, including the black leather driver and front passenger seats."
+        },
+        {
+            "file": "03_MKZ_Driver_Gauges.jpg",
+            "description": "This is an interior view of the driver's side cockpit from a three-quarter angle. The image showcases the steering wheel, instrument cluster, center console, and the black leather front seats."
+        },
+        {
+            "file": "10_Finance_Payment.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile phone screen displaying a pop-up confirmation for a Zelle money transfer."
+        },
+        {
+            "file": "11_Finance_Banking.jpg",
+            "description": "This image does not show any part of a vehicle. It is a screenshot of a mobile banking application interface displaying a list of financial transactions."
+        },
+        {
+            "file": "12_Transport_Email.jpg",
+            "description": "The provided image does not show any part of the 2016 Lincoln MKZ Hybrid. It is a screenshot of an email from a transport company regarding shipping arrangements for the vehicle."
+        }
+    ]
+}
