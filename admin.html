@@ -53,17 +53,20 @@
   <div class="sub">Read / add / edit / remove vehicle photos — every change is a real commit to the repo.</div>
 
   <div class="warn">
-    This page is client-side only (GitHub Pages has no server). The admin password above is just a UX
-    gate — anyone who reads the page source could bypass it. The actual security boundary is the
-    GitHub token below: it needs "repo" write access, so only paste one you trust this device with,
-    and revoke it from GitHub when you're done for the day.
+    This page is client-side only (GitHub Pages has no server), so the password above is a UX gate,
+    not a real credential boundary — anyone reading page source could bypass it. The GitHub token is
+    the actual security boundary. Click "Get token from GCP" to pull it fresh from Secret Manager
+    (server-brokered, your GCP credentials never touch the browser) — or paste one manually if the
+    broker endpoint isn't deployed yet.
   </div>
 
   <div class="token-bar">
-    <input type="password" id="ghtoken" placeholder="GitHub personal access token (repo scope)">
-    <button onclick="saveToken()">Save Token</button>
+    <button onclick="fetchTokenFromServer()">Get token from GCP</button>
+    <input type="password" id="ghtoken" placeholder="...or paste a GitHub PAT manually (repo scope)">
+    <button onclick="saveToken()">Save Pasted Token</button>
     <span class="badge" id="token-badge">No token set</span>
   </div>
+  <div class="status" id="token-status"></div>
 
   <div class="tabs" id="vehicle-tabs"></div>
 
@@ -111,18 +114,18 @@
   </div>
 </div>
 
+<script src="assets/site-auth.js"></script>
 <script src="assets/fleet-api.js"></script>
 <script>
-  const ADMIN_PASSWORD = "BubsyLove13";
-  const DANGER_PASSPHRASE = "WCPGWrong";
   const VEHICLES = ["F350", "MKZ", "TownCar", "Jayco"];
   let currentVehicle = "F350";
   let currentManifest = null;
 
   function checkPassword() {
     const pw = document.getElementById('pw').value;
-    if (pw === ADMIN_PASSWORD) {
-      sessionStorage.setItem('fleet_admin_ok', '1');
+    if (SiteAuth.checkPassword(pw)) {
+      SiteAuth.rememberPassword(pw);
+      SiteAuth.unlock('fleet_admin_ok');
       document.getElementById('gate').style.display = 'none';
       document.getElementById('app').style.display = 'block';
       init();
@@ -130,7 +133,7 @@
       document.getElementById('gate-status').textContent = 'Incorrect password.';
     }
   }
-  if (sessionStorage.getItem('fleet_admin_ok') === '1') {
+  if (SiteAuth.isUnlocked('fleet_admin_ok')) {
     document.getElementById('gate').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     window.addEventListener('DOMContentLoaded', init);
@@ -143,6 +146,29 @@
     document.getElementById('token-badge').textContent = 'Token set (this tab only)';
     document.getElementById('token-badge').classList.add('set');
     document.getElementById('ghtoken').value = '';
+  }
+
+  async function fetchTokenFromServer() {
+    const pw = SiteAuth.getRememberedPassword();
+    setStatus('token-status', 'Requesting token from GCP...', true);
+    try {
+      const res = await fetch(SiteAuth.getApiBase() + '/fleet-admin/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(res.status + ': ' + body);
+      }
+      const data = await res.json();
+      FleetAPI.configure({ token: data.token });
+      document.getElementById('token-badge').textContent = 'Token set (from GCP, this tab only)';
+      document.getElementById('token-badge').classList.add('set');
+      setStatus('token-status', 'Token pulled from Secret Manager.', true);
+    } catch (e) {
+      setStatus('token-status', 'Broker unavailable — paste a token manually instead. (' + e.message + ')', false);
+    }
   }
 
   function init() {
@@ -215,8 +241,7 @@
   }
 
   function confirmDanger(what) {
-    const pass = prompt(`Type the confirmation passphrase to ${what}:`);
-    return pass === DANGER_PASSPHRASE;
+    return SiteAuth.confirmDanger(what);
   }
 
   async function deleteOne(index) {

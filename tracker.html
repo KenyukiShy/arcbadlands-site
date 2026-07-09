@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Engagement Tracker — AutoBäad</title>
+<style>
+  :root{--bg:#1a1a1a;--panel:#242424;--accent:#c0392b;--muted:#999;--ok:#3a7d44;--danger:#b8433a;}
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:#eee;font-family:'DM Mono',monospace,monospace;margin:0;padding:24px;}
+  h1{font-size:20px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .sub{color:var(--muted);font-size:12px;margin-bottom:24px;}
+  .gate{max-width:380px;margin:80px auto;background:var(--panel);padding:28px;border-radius:8px;}
+  .gate input{width:100%;padding:10px;margin:8px 0;background:#151515;border:1px solid #333;color:#eee;border-radius:4px;font-family:inherit;}
+  button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.5px;text-transform:uppercase;}
+  button.secondary{background:#3a3a3a;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;}
+  .card{background:var(--panel);border-radius:8px;padding:18px;}
+  .card .n{font-size:28px;font-weight:bold;}
+  .card .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+  .panel{background:var(--panel);border-radius:8px;padding:20px;margin-bottom:20px;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th,td{padding:6px 8px;border-bottom:1px solid #333;text-align:left;}
+  th{color:var(--muted);text-transform:uppercase;font-size:10px;}
+  .status{font-size:12px;margin-top:10px;}
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--danger);}
+  .warn{font-size:11px;color:#e0a020;background:#2e2814;padding:10px;border-radius:4px;margin-bottom:16px;}
+  .detail-toggle{margin-bottom:16px;}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate">
+  <h1>Engagement Tracker</h1>
+  <div class="sub">Live outreach data — nothing here lives in this repo</div>
+  <input type="password" id="pw" placeholder="Password">
+  <button onclick="checkPassword()">Enter</button>
+  <div class="status err" id="gate-status"></div>
+</div>
+
+<div id="app" style="display:none;max-width:1000px;margin:0 auto;">
+  <h1>Engagement Tracker</h1>
+  <div class="sub">Fetched live from Firestore on every load — dealer/buyer data never touches git.</div>
+
+  <div class="warn">
+    This page and this repo never store buyer names, phones, or emails. Everything below is fetched
+    fresh from Firestore each time you load the page. The "summary" view (default) is counts only.
+    Lead detail (names/phone/email) is a separate, explicit click below — don't leave that panel open
+    on a shared screen.
+  </div>
+
+  <button class="secondary" onclick="loadSummary()">Refresh</button>
+  <div class="status" id="summary-status"></div>
+
+  <div class="grid" id="summary-cards"></div>
+
+  <div class="panel">
+    <h3 style="margin-top:0;font-size:14px;">Engagement Levels</h3>
+    <table id="engagement-table"><tbody></tbody></table>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-top:0;font-size:14px;">Buyer Types</h3>
+    <table id="buyertype-table"><tbody></tbody></table>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-top:0;font-size:14px;">Vehicle Status</h3>
+    <table id="vehicle-table"><tbody></tbody></table>
+  </div>
+
+  <div class="panel">
+    <div class="detail-toggle">
+      <button onclick="loadDetail()">Show Lead Detail (names/phone/email)</button>
+    </div>
+    <div class="status" id="detail-status"></div>
+    <table id="detail-table" style="display:none;">
+      <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Vehicle</th><th>Status</th></tr></thead>
+      <tbody id="detail-rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="assets/site-auth.js"></script>
+<script>
+  function checkPassword() {
+    const pw = document.getElementById('pw').value;
+    if (SiteAuth.checkPassword(pw)) {
+      SiteAuth.rememberPassword(pw);
+      SiteAuth.unlock('tracker_ok');
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadSummary();
+    } else {
+      document.getElementById('gate-status').textContent = 'Incorrect password.';
+    }
+  }
+  if (SiteAuth.isUnlocked('tracker_ok')) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    window.addEventListener('DOMContentLoaded', loadSummary);
+  }
+
+  function setStatus(id, msg, ok) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'status ' + (ok ? 'ok' : 'err');
+  }
+
+  function fillTable(id, obj) {
+    const tbody = document.querySelector('#' + id + ' tbody');
+    tbody.innerHTML = Object.entries(obj).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')
+      || '<tr><td colspan="2">No data</td></tr>';
+  }
+
+  async function loadSummary() {
+    setStatus('summary-status', 'Loading...', true);
+    try {
+      const res = await fetch(SiteAuth.getApiBase() + '/engagement/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: SiteAuth.getRememberedPassword() }),
+      });
+      if (!res.ok) throw new Error(res.status + ': ' + (await res.text()));
+      const data = await res.json();
+
+      document.getElementById('summary-cards').innerHTML = `
+        <div class="card"><div class="n">${data.total_buyers}</div><div class="l">Total Buyers</div></div>
+        <div class="card"><div class="n">${data.calls_last_7_days}</div><div class="l">Calls (7d)</div></div>
+        <div class="card"><div class="n">${data.total_calls_logged}</div><div class="l">Total Calls Logged</div></div>
+        <div class="card"><div class="n">${data.escalated_to_kenyon}</div><div class="l">Escalated to Kenyon</div></div>
+      `;
+      fillTable('engagement-table', data.engagement_levels || {});
+      fillTable('buyertype-table', data.buyer_types || {});
+      fillTable('vehicle-table', data.vehicle_status || {});
+      setStatus('summary-status', 'Updated ' + new Date(data.generated_at).toLocaleString(), true);
+    } catch (e) {
+      setStatus('summary-status', 'Error: ' + e.message + ' — is the /engagement route deployed on commplex-api?', false);
+    }
+  }
+
+  async function loadDetail() {
+    setStatus('detail-status', 'Loading lead detail...', true);
+    try {
+      const res = await fetch(SiteAuth.getApiBase() + '/engagement/detail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: SiteAuth.getRememberedPassword() }),
+      });
+      if (!res.ok) throw new Error(res.status + ': ' + (await res.text()));
+      const data = await res.json();
+      document.getElementById('detail-rows').innerHTML = (data.buyers || []).map(b => `
+        <tr>
+          <td>${b.name || ''}</td>
+          <td>${b.phone || ''}</td>
+          <td>${b.email || ''}</td>
+          <td>${b.vehicle_interest || ''}</td>
+          <td>${(b.current_status && b.current_status.engagement_level) || ''}</td>
+        </tr>
+      `).join('');
+      document.getElementById('detail-table').style.display = 'table';
+      setStatus('detail-status', data.count + ' leads loaded.', true);
+    } catch (e) {
+      setStatus('detail-status', 'Error: ' + e.message, false);
+    }
+  }
+</script>
+</body>
+</html>

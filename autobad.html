@@ -106,7 +106,7 @@ footer p{font-size:11px;font-family:'DM Mono',monospace;}
     <a href="#vehicles">Vehicles</a>
     <a href="#demo">Talk to Audry</a>
     <a href="#invest">Partner / Invest</a>
-    <a href="tel:+18667362349" class="nav-cta">(866) 736-2349</a>
+    <a href="tel:7018705235" class="nav-cta">(701) 870-5235</a>
   </div>
 </nav>
 
@@ -114,7 +114,7 @@ footer p{font-size:11px;font-family:'DM Mono',monospace;}
   <div>
     <div class="hero-eyebrow">Hazen · North Dakota · Private Liquidation</div>
     <h1>Four <em>Rare</em><br>Vehicles.<br>One Seller.</h1>
-    <p>Direct from owner — no auction markup, no dealer overhead. Collector-grade survivors and working units across ND and GA. Talk to Audry or call Kenyon direct.</p>
+    <p>Direct from owner — no auction markup, no dealer overhead. Collector-grade survivors and working units across ND and GA. Call or text Kenyon direct — Audry's chat below is an early, in-development preview.</p>
     <div class="hero-stats">
       <div class="stat"><div class="stat-n">31,511</div><div class="stat-l">Town Car miles</div></div>
       <div class="stat"><div class="stat-n">47k</div><div class="stat-l">F-350 miles</div></div>
@@ -123,15 +123,16 @@ footer p{font-size:11px;font-family:'DM Mono',monospace;}
     </div>
     <div class="hero-btns">
       <a href="#vehicles" class="btn-primary">View All Vehicles</a>
-      <a href="tel:+18667362349" class="btn-secondary">(866) 736-2349</a>
+      <a href="tel:7018705235" class="btn-secondary">(701) 870-5235</a>
+      <a href="tel:7019518490" class="btn-secondary">(701) 951-8490</a>
     </div>
   </div>
   <div id="demo" class="chat-panel">
     <div class="chat-header">
       <div class="chat-avatar">AH</div>
       <div class="chat-info">
-        <p>Audry Harper</p>
-        <p>AutoBäad · AI Sales Agent</p>
+        <p>Audry Harper <span style="font-size:10px;color:#e0a020;text-transform:uppercase;letter-spacing:.5px;">· In Development</span></p>
+        <p>AutoBäad · AI Sales Agent (knowledge-base preview)</p>
       </div>
       <div class="chat-dot"></div>
     </div>
@@ -373,13 +374,13 @@ async function callAudry(text) {
     });
     const data = await res.json();
     setTyping(false);
-    const reply = data.reply || "I'm having trouble connecting. Please text (866) 736-2349.";
+    const reply = data.reply || "I'm having trouble connecting. Please text (701) 870-5235.";
     history.push({ role: 'assistant', content: reply });
     addMsg(reply, 'audry');
   } catch (e) {
     setTyping(false);
     console.error('Fetch error:', e);
-    addMsg("Connection issue. Please call or text (866) 736-2349.", 'audry');
+    addMsg("Connection issue. Please call or text (701) 870-5235 or (701) 951-8490.", 'audry');
   } finally {
     isLoading = false;
     if (btn) btn.disabled = false;
