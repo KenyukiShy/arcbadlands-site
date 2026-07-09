@@ -1,0 +1,22 @@
+{
+  "vehicle": "Jayco",
+  "photos": [
+    {"src": "fleet_assets/Jayco/01_Camper_Exterior_Rear_Angle.jpg", "caption": "Exterior — Rear 3/4", "alt": "Jayco Eagle HT exterior rear angle", "size": "large"},
+    {"src": "fleet_assets/Jayco/02_Camper_Exterior_Entry.jpg", "caption": "Entry Door", "alt": "Jayco Eagle HT entry door", "size": "normal"},
+    {"src": "fleet_assets/Jayco/06_Jayco_Bunks.jpg", "caption": "Bunk Room", "alt": "Jayco Eagle HT bunk room", "size": "normal"},
+    {"src": "fleet_assets/Jayco/11_Jayco_Fireplace.jpg", "caption": "Fireplace / Living Area", "alt": "Jayco Eagle HT fireplace living area", "size": "normal"},
+    {"src": "fleet_assets/Jayco/14_Jayco_Panel.jpg", "caption": "Interior Panel", "alt": "Jayco Eagle HT interior panel detail", "size": "normal"},
+    {"src": "fleet_assets/Jayco/01_Towing_Setup.jpg", "caption": "Towing Setup", "alt": "Jayco towing setup hitch", "size": "small"},
+    {"src": "fleet_assets/Jayco/07_Towing_Setup.jpg", "caption": "Towing Setup", "alt": "Jayco towing setup additional angle", "size": "small"},
+    {"src": "fleet_assets/Jayco/02_Jayco.jpg", "caption": "Additional View", "alt": "Jayco Eagle HT additional exterior view", "size": "small"},
+    {"src": "fleet_assets/Jayco/15_Jayco_Jacks.jpg", "caption": "Tire / Tread Detail", "alt": "Jayco Eagle HT tire tread detail", "size": "small"},
+    {"src": "fleet_assets/Jayco/16_Jayco_Seals.jpg", "caption": "Electrical / Wiring", "alt": "Jayco Eagle HT electrical wiring detail", "size": "small"},
+    {"src": "fleet_assets/Jayco/17_Jayco_Underside.jpg", "caption": "Wheel Well Detail", "alt": "Jayco Eagle HT tire wheel well detail", "size": "small"},
+    {"src": "fleet_assets/Jayco/13_TC_Interior.jpg", "caption": "Dinette / Booth", "alt": "Jayco Eagle HT dinette booth seating", "size": "small"},
+    {"src": "fleet_assets/Jayco/14_TC_Interior.jpg", "caption": "Dinette — Additional", "alt": "Jayco Eagle HT dinette additional angle", "size": "small"},
+    {"src": "fleet_assets/Jayco/15_TC_Interior.jpg", "caption": "Living Area — Sofa", "alt": "Jayco Eagle HT living area sofa", "size": "small"},
+    {"src": "fleet_assets/Jayco/16_TC_Interior.jpg", "caption": "Bedroom — Additional", "alt": "Jayco Eagle HT bedroom additional angle", "size": "small"},
+    {"src": "fleet_assets/Jayco/18_TC_Bedroom.jpg", "caption": "Master Bedroom", "alt": "Jayco Eagle HT master bedroom", "size": "small"}
+  ],
+  "note": "All 16 photos shown are actual vehicle. Full walkthrough video with Sherrie Appleby available on request."
+}

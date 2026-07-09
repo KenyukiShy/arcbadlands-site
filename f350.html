@@ -109,6 +109,7 @@ footer{background:var(--ink);color:#555;padding:24px 5vw;text-align:center;font-
   .stats-inner{gap:12px;}
 }
 </style>
+<link rel="stylesheet" href="assets/gallery-fix.css">
 </head>
 <body>
 
@@ -180,69 +181,12 @@ footer{background:var(--ink);color:#555;padding:24px 5vw;text-align:center;font-
   <div class="section-label">Photo Gallery</div>
   <div class="section-title">Actual Vehicle — Douglasville, GA</div>
 
-  <div class="gallery-grid">
-    <div class="photo large" onclick="openLightbox(this)" data-caption="King Ranch Interior — Rear Bench Seat">
-      <img src="fleet_assets/F350/04_F350_Seats.jpg" alt="F-350 King Ranch interior rear bench seat">
-      <div class="photo-caption">King Ranch Interior</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="King Ranch Interior — Additional View">
-      <img src="fleet_assets/F350/09_F350_Extra.jpg" alt="F-350 King Ranch interior additional view">
-      <div class="photo-caption">Interior — Additional</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="5th Wheel Kingpin Hitch Engaged">
-      <div class="photo-placeholder">
-        <div class="upload-icon">🔩</div>
-        <div class="ph-label">5th Wheel<br>Kingpin Hitch</div>
-      </div>
-      <div class="photo-caption">5th Wheel Kingpin</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="6.8L V10 Triton Engine Bay">
-      <div class="photo-placeholder">
-        <div class="upload-icon">⚙️</div>
-        <div class="ph-label">6.8L V10<br>Engine Bay</div>
-      </div>
-      <div class="photo-caption">V10 Engine Bay</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Odometer — 47,000 Actual Miles">
-      <div class="photo-placeholder">
-        <div class="upload-icon">📍</div>
-        <div class="ph-label">Odometer<br>47,000 Miles</div>
-      </div>
-      <div class="photo-caption">Odometer Reading</div>
-    </div>
-  </div>
+  <div class="gallery-grid" id="gallery-main-grid"></div>
 
-  <div class="gallery-add-row">
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Exterior — Front 3/4 View">
-      <div class="photo-placeholder" style="height:160px;">
-        <div class="upload-icon">📸</div>
-        <div class="ph-label">Front 3/4</div>
-      </div>
-      <div class="photo-caption">Front 3/4</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Rear 3/4 View — Long Bed">
-      <div class="photo-placeholder" style="height:160px;">
-        <div class="upload-icon">📸</div>
-        <div class="ph-label">Rear 3/4<br>Long Bed</div>
-      </div>
-      <div class="photo-caption">Rear 3/4</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Front Grille / Exterior Detail">
-      <div class="photo-placeholder" style="height:160px;">
-        <div class="upload-icon">📸</div>
-        <div class="ph-label">Front Grille<br>Exterior</div>
-      </div>
-      <div class="photo-caption">Grille Detail</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Bed Cap / Cargo Bed">
-      <div class="photo-placeholder" style="height:160px;">
-        <div class="upload-icon">📦</div>
-        <div class="ph-label">Bed Cap<br>Cargo Bed</div>
-      </div>
-      <div class="photo-caption">Bed Cap</div>
-    </div>
-  </div>
-  <div class="gallery-note">2 actual-vehicle interior photos shown — F-350 King Ranch, Douglasville GA. Full exterior/mechanical photo shoot (50–80 shots) still needed — coordinate through Sherrie Appleby before BaT or public listing. Remaining slots are placeholders, not photos.</div>
+  <div class="gallery-add-row" id="gallery-add-row"></div>
+  <div class="gallery-note" id="gallery-note-text"></div>
+  <script src="assets/gallery-render.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', function(){ renderGallery('F350'); });</script>
 </div>
 
 <!-- SPECS + PITCH -->
@@ -352,5 +296,6 @@ function openLightbox(el) {
 function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
 </script>
+<script src="assets/gallery-fix.js"></script>
 </body>
 </html>

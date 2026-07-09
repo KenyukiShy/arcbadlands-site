@@ -107,6 +107,7 @@ footer{background:var(--ink);color:#555;padding:24px 5vw;text-align:center;font-
   .stats-inner{gap:12px;}
 }
 </style>
+<link rel="stylesheet" href="assets/gallery-fix.css">
 </head>
 <body>
 
@@ -178,64 +179,12 @@ footer{background:var(--ink);color:#555;padding:24px 5vw;text-align:center;font-
   <div class="section-label">Photo Gallery</div>
   <div class="section-title">13 Photos Available · Hazen, ND</div>
 
-  <div class="gallery-grid">
-    <div class="photo large" onclick="openLightbox(this)" data-caption="Driver-Side Profile — Hazen, ND">
-      <img src="fleet_assets/TownCar/01_TownCar_Front_34_Driver.jpg" alt="Town Car driver-side front 3/4">
-      <div class="photo-caption">Driver Profile — Oxford White</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Front View — Oxford White">
-      <img src="fleet_assets/TownCar/02_TownCar_Front.jpg" alt="Town Car front view">
-      <div class="photo-caption">Front View</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Side Profile">
-      <img src="fleet_assets/TownCar/03_TownCar_Side_Profile.jpg" alt="Town Car side profile">
-      <div class="photo-caption">Side Profile</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Interior — Windsor Velour Cabin">
-      <img src="fleet_assets/TownCar/07_TownCar_Interior_Cabin.jpg" alt="Town Car Windsor Velour interior cabin">
-      <div class="photo-caption">Windsor Velour Interior</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Wheel Detail">
-      <img src="fleet_assets/TownCar/06_TownCar_Wheel_Detail.jpg" alt="Town Car wheel detail">
-      <div class="photo-caption">Wheel Detail</div>
-    </div>
-  </div>
+  <div class="gallery-grid" id="gallery-main-grid"></div>
 
-  <div class="gallery-add-row">
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Rear 3/4 View — Passenger Side">
-      <img src="fleet_assets/TownCar/04_TownCar_Rear_34_Passenger.jpg" alt="Town Car rear 3/4 passenger side" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Rear 3/4</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Rear View">
-      <img src="fleet_assets/TownCar/05_TownCar_Rear.jpg" alt="Town Car rear view" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Rear View</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Door Controls Detail">
-      <img src="fleet_assets/TownCar/10_TownCar_Door_Controls.jpg" alt="Town Car door controls detail" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Door Controls</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Center Stack Detail">
-      <img src="fleet_assets/TownCar/11_TownCar_Center_Stack.jpg" alt="Town Car center stack detail" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Center Stack</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Headlight Detail">
-      <img src="fleet_assets/TownCar/12_TownCar_Headlight_Detail.jpg" alt="Town Car headlight detail" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Headlight Detail</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Additional Exterior Angle">
-      <img src="fleet_assets/TownCar/04_TC.jpg" alt="Town Car additional exterior angle" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Additional Angle</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Additional Exterior Detail">
-      <img src="fleet_assets/TownCar/08_TC.jpg" alt="Town Car additional exterior detail" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Exterior Detail</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Trim Detail">
-      <img src="fleet_assets/TownCar/09_TC.jpg" alt="Town Car trim detail" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Trim Detail</div>
-    </div>
-  </div>
-  <div class="gallery-note">All 13 photos shown are actual vehicle — Hazen, ND. Full documentation available on request. No finance or logistics documents are associated with this listing.</div>
+  <div class="gallery-add-row" id="gallery-add-row"></div>
+  <div class="gallery-note" id="gallery-note-text"></div>
+  <script src="assets/gallery-render.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', function(){ renderGallery('TownCar'); });</script>
 </div>
 
 <!-- CONTENT -->
@@ -341,5 +290,6 @@ function openLightbox(el) {
 function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
 </script>
+<script src="assets/gallery-fix.js"></script>
 </body>
 </html>

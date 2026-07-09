@@ -1,0 +1,35 @@
+/* gallery-fix.css
+   Fixes the "ghost caption" bug: on ChromeOS/trackpad devices, fast scrolling
+   with the cursor held stationary can leave a :hover state visually "stuck"
+   on a photo tile that has already scrolled off its original position,
+   painting its caption bar over unrelated content below/above it.
+
+   Root cause: Chromium repaints :hover-triggered layers lazily; without an
+   explicit compositing/containment boundary, the stale paint can bleed
+   outside the tile's own box during momentum-scroll on trackpads.
+
+   Fix: force each photo tile onto its own paint + layout containment layer,
+   and only allow the hover-reveal itself on devices with genuine hover
+   capability. A companion JS snippet (gallery-fix.js) forces a repaint on
+   scroll so any stuck hover state is cleared immediately.
+*/
+
+.photo, .gallery-grid .photo, .gallery-add-row .photo {
+  contain: layout paint style;
+  isolation: isolate;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.photo-caption {
+  pointer-events: none; /* caption itself should never be able to "catch" a stray hover */
+}
+
+/* Only reveal captions on devices with real hover + precise pointer.
+   On touch-only devices the caption is always visible instead (no hover to get stuck). */
+@media (hover: none) {
+  .photo-caption {
+    opacity: 1 !important;
+    background: linear-gradient(transparent, rgba(0,0,0,.55));
+  }
+}

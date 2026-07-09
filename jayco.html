@@ -119,6 +119,7 @@ footer{background:var(--ink);color:#555;padding:24px 5vw;text-align:center;font-
   .hero-cta-row{flex-direction:column;}
 }
 </style>
+<link rel="stylesheet" href="assets/gallery-fix.css">
 </head>
 <body>
 
@@ -189,76 +190,12 @@ footer{background:var(--ink);color:#555;padding:24px 5vw;text-align:center;font-
   <div class="section-label">Photo Gallery</div>
   <div class="section-title">16-Photo Showcase Available</div>
 
-  <div class="gallery-grid">
-    <div class="photo large" onclick="openLightbox(this)" data-caption="Exterior — Rear 3/4 Angle">
-      <img src="fleet_assets/Jayco/01_Camper_Exterior_Rear_Angle.jpg" alt="Jayco Eagle HT exterior rear angle">
-      <div class="photo-caption">Exterior — Rear 3/4</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Entry Door / Exterior">
-      <img src="fleet_assets/Jayco/02_Camper_Exterior_Entry.jpg" alt="Jayco Eagle HT entry door">
-      <div class="photo-caption">Entry Door</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Bunk Room — Double-Over-Double">
-      <img src="fleet_assets/Jayco/06_Jayco_Bunks.jpg" alt="Jayco Eagle HT bunk room">
-      <div class="photo-caption">Bunk Room</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Fireplace / Living Area">
-      <img src="fleet_assets/Jayco/11_Jayco_Fireplace.jpg" alt="Jayco Eagle HT fireplace living area">
-      <div class="photo-caption">Fireplace / Living Area</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Interior Panel Detail">
-      <img src="fleet_assets/Jayco/14_Jayco_Panel.jpg" alt="Jayco Eagle HT interior panel detail">
-      <div class="photo-caption">Interior Panel</div>
-    </div>
-  </div>
+  <div class="gallery-grid" id="gallery-main-grid"></div>
 
-  <div class="gallery-add-row">
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Towing Setup — Hitch">
-      <img src="fleet_assets/Jayco/01_Towing_Setup.jpg" alt="Jayco towing setup hitch" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Towing Setup</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Towing Setup — Additional Angle">
-      <img src="fleet_assets/Jayco/07_Towing_Setup.jpg" alt="Jayco towing setup additional angle" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Towing Setup</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Exterior — Additional View">
-      <img src="fleet_assets/Jayco/02_Jayco.jpg" alt="Jayco Eagle HT additional exterior view" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Additional View</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Cabinet / Jacks Detail">
-      <img src="fleet_assets/Jayco/15_Jayco_Jacks.jpg" alt="Jayco Eagle HT stabilizer jacks detail" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Stabilizer Jacks</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Seal / Weatherproofing Detail">
-      <img src="fleet_assets/Jayco/16_Jayco_Seals.jpg" alt="Jayco Eagle HT seals detail" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Seals Detail</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Underside / Frame Detail">
-      <img src="fleet_assets/Jayco/17_Jayco_Underside.jpg" alt="Jayco Eagle HT underside frame detail" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Underside Detail</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Interior — Living Area">
-      <img src="fleet_assets/Jayco/13_TC_Interior.jpg" alt="Jayco Eagle HT interior living area" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Interior — Living Area</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Interior — Additional Angle">
-      <img src="fleet_assets/Jayco/14_TC_Interior.jpg" alt="Jayco Eagle HT interior additional angle" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Interior — Additional</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Interior — Kitchen / Galley">
-      <img src="fleet_assets/Jayco/15_TC_Interior.jpg" alt="Jayco Eagle HT interior kitchen galley" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Kitchen / Galley</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Interior — Bath / Utility">
-      <img src="fleet_assets/Jayco/16_TC_Interior.jpg" alt="Jayco Eagle HT interior bath utility" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Bath / Utility</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Master Bedroom">
-      <img src="fleet_assets/Jayco/18_TC_Bedroom.jpg" alt="Jayco Eagle HT master bedroom" style="width:100%;height:100%;object-fit:cover;">
-      <div class="photo-caption">Master Bedroom</div>
-    </div>
-  </div>
-  <div class="gallery-note">All 16 photos shown are actual vehicle. Full walkthrough video with Sherrie Appleby available on request.</div>
+  <div class="gallery-add-row" id="gallery-add-row"></div>
+  <div class="gallery-note" id="gallery-note-text"></div>
+  <script src="assets/gallery-render.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', function(){ renderGallery('Jayco'); });</script>
 </div>
 
 <!-- SPECS + DISCLOSURES -->
@@ -365,5 +302,6 @@ function closeLightbox() {
 }
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
 </script>
+<script src="assets/gallery-fix.js"></script>
 </body>
 </html>

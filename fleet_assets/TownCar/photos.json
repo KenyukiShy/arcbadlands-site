@@ -1,0 +1,19 @@
+{
+  "vehicle": "TownCar",
+  "photos": [
+    {"src": "fleet_assets/TownCar/01_TownCar_Front_34_Driver.jpg", "caption": "Driver Profile — Oxford White", "alt": "Town Car driver-side front 3/4", "size": "large"},
+    {"src": "fleet_assets/TownCar/02_TownCar_Front.jpg", "caption": "Front View", "alt": "Town Car front view", "size": "normal"},
+    {"src": "fleet_assets/TownCar/03_TownCar_Side_Profile.jpg", "caption": "Side Profile", "alt": "Town Car side profile", "size": "normal"},
+    {"src": "fleet_assets/TownCar/07_TownCar_Interior_Cabin.jpg", "caption": "Windsor Velour Interior", "alt": "Town Car Windsor Velour interior cabin", "size": "normal"},
+    {"src": "fleet_assets/TownCar/06_TownCar_Wheel_Detail.jpg", "caption": "Wheel Detail", "alt": "Town Car wheel detail", "size": "normal"},
+    {"src": "fleet_assets/TownCar/04_TownCar_Rear_34_Passenger.jpg", "caption": "Rear 3/4", "alt": "Town Car rear 3/4 passenger side", "size": "small"},
+    {"src": "fleet_assets/TownCar/05_TownCar_Rear.jpg", "caption": "Rear View", "alt": "Town Car rear view", "size": "small"},
+    {"src": "fleet_assets/TownCar/10_TownCar_Door_Controls.jpg", "caption": "Door Controls", "alt": "Town Car door controls detail", "size": "small"},
+    {"src": "fleet_assets/TownCar/11_TownCar_Center_Stack.jpg", "caption": "Center Stack", "alt": "Town Car center stack detail", "size": "small"},
+    {"src": "fleet_assets/TownCar/12_TownCar_Headlight_Detail.jpg", "caption": "Headlight Detail", "alt": "Town Car headlight detail", "size": "small"},
+    {"src": "fleet_assets/TownCar/04_TC.jpg", "caption": "Additional Angle", "alt": "Town Car additional exterior angle", "size": "small"},
+    {"src": "fleet_assets/TownCar/08_TC.jpg", "caption": "Exterior Detail", "alt": "Town Car additional exterior detail", "size": "small"},
+    {"src": "fleet_assets/TownCar/09_TC.jpg", "caption": "Trim Detail", "alt": "Town Car trim detail", "size": "small"}
+  ],
+  "note": "All 13 photos shown are actual vehicle — Hazen, ND. Full documentation available on request. No finance or logistics documents are associated with this listing."
+}

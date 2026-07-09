@@ -115,6 +115,7 @@ footer{background:var(--ink);color:#555;padding:24px 5vw;text-align:center;font-
   .stats-inner{gap:12px;}
 }
 </style>
+<link rel="stylesheet" href="assets/gallery-fix.css">
 </head>
 <body>
 
@@ -186,69 +187,12 @@ footer{background:var(--ink);color:#555;padding:24px 5vw;text-align:center;font-
   <div class="section-label">Photo Gallery</div>
   <div class="section-title">Reference &amp; Actual Photos</div>
 
-  <div class="gallery-grid">
-    <div class="photo large" onclick="openLightbox(this)" data-caption="2016 MKZ Hybrid — Campaign Metallic (Graphite/Pewter)">
-      <img src="fleet_assets/MKZ/01_MKZ_Exterior_Front.jpg" alt="2016 Lincoln MKZ Hybrid exterior front">
-      <div class="photo-caption">Campaign Metallic Exterior</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Driver Gauges / Instrument Cluster">
-      <img src="fleet_assets/MKZ/03_MKZ_Driver_Gauges.jpg" alt="2016 Lincoln MKZ driver gauges">
-      <div class="photo-caption">Driver Gauges</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="8-Inch SYNC Touchscreen / Center Console">
-      <div class="photo-placeholder">
-        <div class="upload-icon">📱</div>
-        <div class="ph-label">SYNC 8" Touchscreen<br>Center Console</div>
-      </div>
-      <div class="photo-caption">SYNC Touchscreen</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Interior — Premium Fabric / Miko Suede">
-      <div class="photo-placeholder">
-        <div class="upload-icon">🪑</div>
-        <div class="ph-label">Interior<br>Premium Fabric<br>Miko Suede</div>
-      </div>
-      <div class="photo-caption">Interior</div>
-    </div>
-    <div class="photo" onclick="openLightbox(this)" data-caption="Rear Seating Area">
-      <div class="photo-placeholder">
-        <div class="upload-icon">🪑</div>
-        <div class="ph-label">Rear Seating<br>Area</div>
-      </div>
-      <div class="photo-caption">Rear Seats</div>
-    </div>
-  </div>
+  <div class="gallery-grid" id="gallery-main-grid"></div>
 
-  <div class="gallery-add-row">
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Rear 3/4 View">
-      <div class="photo-placeholder" style="height:160px;">
-        <div class="upload-icon">📸</div>
-        <div class="ph-label">Rear 3/4</div>
-      </div>
-      <div class="photo-caption">Rear 3/4</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Dashboard & Instrument Cluster">
-      <div class="photo-placeholder" style="height:160px;">
-        <div class="upload-icon">🎛</div>
-        <div class="ph-label">Dashboard<br>Instruments</div>
-      </div>
-      <div class="photo-caption">Dashboard</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Odometer Reading">
-      <div class="photo-placeholder" style="height:160px;">
-        <div class="upload-icon">📍</div>
-        <div class="ph-label">Odometer<br>~100K Miles</div>
-      </div>
-      <div class="photo-caption">Odometer</div>
-    </div>
-    <div class="photo" style="height:160px;border-radius:4px;" onclick="openLightbox(this)" data-caption="VIN Plate / Door Jamb">
-      <div class="photo-placeholder" style="height:160px;">
-        <div class="upload-icon">🔎</div>
-        <div class="ph-label">VIN / Door<br>Jamb</div>
-      </div>
-      <div class="photo-caption">VIN Plate</div>
-    </div>
-  </div>
-  <div class="gallery-note">Exterior and driver-gauges photos shown are actual vehicle. Remaining reference images faithfully represent actual vehicle color, trim, and material pending full photo shoot. Actual vehicle available for inspection at lot — Hazen, ND by appointment.</div>
+  <div class="gallery-add-row" id="gallery-add-row"></div>
+  <div class="gallery-note" id="gallery-note-text"></div>
+  <script src="assets/gallery-render.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', function(){ renderGallery('MKZ'); });</script>
 </div>
 
 <!-- CONTENT -->
@@ -292,16 +236,7 @@ footer{background:var(--ink);color:#555;padding:24px 5vw;text-align:center;font-
   <div class="docs-photos" style="margin-bottom:40px;">
     <h3 style="font-family:'Bebas Neue',sans-serif;font-size:22px;margin-bottom:6px;">Purchase Documentation</h3>
     <div class="sub" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;">Proof-of-purchase screenshots — separate from vehicle photos above</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:500px;">
-      <div class="photo" style="height:200px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Zelle Payment Confirmation">
-        <img src="fleet_assets/MKZ/10_Finance_Payment.jpg" alt="Zelle payment confirmation" style="width:100%;height:100%;object-fit:cover;">
-        <div class="photo-caption">Payment Confirmation</div>
-      </div>
-      <div class="photo" style="height:200px;border-radius:4px;" onclick="openLightbox(this)" data-caption="Bank Verification Record">
-        <img src="fleet_assets/MKZ/11_Finance_Banking.jpg" alt="Bank verification record" style="width:100%;height:100%;object-fit:cover;">
-        <div class="photo-caption">Bank Verification</div>
-      </div>
-    </div>
+    <div id="gallery-doc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:500px;"></div>
   </div>
 
   <div class="disclosure-block">
@@ -367,5 +302,6 @@ function openLightbox(el) {
 function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
 </script>
+<script src="assets/gallery-fix.js"></script>
 </body>
 </html>

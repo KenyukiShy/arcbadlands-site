@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Fleet Admin — AutoBäad</title>
+<style>
+  :root{--bg:#1a1a1a;--panel:#242424;--accent:#c0392b;--muted:#999;--ok:#3a7d44;--danger:#b8433a;}
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:#eee;font-family:'DM Mono',monospace,monospace;margin:0;padding:24px;}
+  h1{font-size:20px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .sub{color:var(--muted);font-size:12px;margin-bottom:24px;}
+  .gate{max-width:380px;margin:80px auto;background:var(--panel);padding:28px;border-radius:8px;}
+  .gate input{width:100%;padding:10px;margin:8px 0;background:#151515;border:1px solid #333;color:#eee;border-radius:4px;font-family:inherit;}
+  button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.5px;text-transform:uppercase;}
+  button.secondary{background:#3a3a3a;}
+  button.danger{background:var(--danger);}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+  .tabs button{background:#2e2e2e;}
+  .tabs button.active{background:var(--accent);}
+  .panel{background:var(--panel);border-radius:8px;padding:20px;margin-bottom:20px;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th,td{padding:8px;border-bottom:1px solid #333;text-align:left;vertical-align:top;}
+  th{color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:1px;}
+  img.thumb{width:70px;height:50px;object-fit:cover;border-radius:3px;background:#111;}
+  input[type=text],select{background:#151515;border:1px solid #333;color:#eee;padding:6px;border-radius:3px;font-family:inherit;font-size:12px;width:100%;}
+  .row-actions{display:flex;gap:6px;}
+  .add-form{display:grid;grid-template-columns:1fr 1fr 120px auto auto;gap:8px;align-items:end;margin-top:16px;}
+  .add-form label{font-size:10px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;}
+  .status{font-size:12px;margin-top:10px;min-height:16px;}
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--danger);}
+  .token-bar{display:flex;gap:8px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+  .token-bar input{flex:1;min-width:240px;}
+  .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#333;color:var(--muted);}
+  .badge.set{background:var(--ok);color:#fff;}
+  .warn{font-size:11px;color:#e0a020;background:#2e2814;padding:10px;border-radius:4px;margin-bottom:16px;}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate">
+  <h1>Fleet Admin</h1>
+  <div class="sub">AutoBäad photo gallery CRUD</div>
+  <input type="password" id="pw" placeholder="Admin password">
+  <button onclick="checkPassword()">Enter</button>
+  <div class="status err" id="gate-status"></div>
+</div>
+
+<div id="app" style="display:none;max-width:1100px;margin:0 auto;">
+  <h1>Fleet Photo Admin</h1>
+  <div class="sub">Read / add / edit / remove vehicle photos — every change is a real commit to the repo.</div>
+
+  <div class="warn">
+    This page is client-side only (GitHub Pages has no server). The admin password above is just a UX
+    gate — anyone who reads the page source could bypass it. The actual security boundary is the
+    GitHub token below: it needs "repo" write access, so only paste one you trust this device with,
+    and revoke it from GitHub when you're done for the day.
+  </div>
+
+  <div class="token-bar">
+    <input type="password" id="ghtoken" placeholder="GitHub personal access token (repo scope)">
+    <button onclick="saveToken()">Save Token</button>
+    <span class="badge" id="token-badge">No token set</span>
+  </div>
+
+  <div class="tabs" id="vehicle-tabs"></div>
+
+  <div class="panel">
+    <table id="photo-table">
+      <thead>
+        <tr><th>Preview</th><th>Caption</th><th>Alt / Data-Caption</th><th>Size</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="photo-rows"></tbody>
+    </table>
+
+    <div class="row-actions" style="margin-top:14px;">
+      <button class="secondary" onclick="refreshCurrent()">Reload from repo</button>
+      <button class="danger" onclick="batchDeleteSelected()">Delete Selected</button>
+    </div>
+    <div class="status" id="list-status"></div>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-top:0;font-size:14px;">Add Photo</h3>
+    <div class="add-form">
+      <div>
+        <label>Caption</label>
+        <input type="text" id="new-caption" placeholder="e.g. Front Grille Detail">
+      </div>
+      <div>
+        <label>Alt / Long Caption</label>
+        <input type="text" id="new-alt" placeholder="e.g. F-350 front grille close up">
+      </div>
+      <div>
+        <label>Size</label>
+        <select id="new-size">
+          <option value="small">small</option>
+          <option value="normal">normal</option>
+          <option value="large">large</option>
+        </select>
+      </div>
+      <div>
+        <label>Image file (optional — leave blank for a placeholder slot)</label>
+        <input type="file" id="new-file" accept="image/*">
+      </div>
+      <button onclick="addPhotoNow()">Add</button>
+    </div>
+    <div class="status" id="add-status"></div>
+  </div>
+</div>
+
+<script src="assets/fleet-api.js"></script>
+<script>
+  const ADMIN_PASSWORD = "BubsyLove13";
+  const DANGER_PASSPHRASE = "WCPGWrong";
+  const VEHICLES = ["F350", "MKZ", "TownCar", "Jayco"];
+  let currentVehicle = "F350";
+  let currentManifest = null;
+
+  function checkPassword() {
+    const pw = document.getElementById('pw').value;
+    if (pw === ADMIN_PASSWORD) {
+      sessionStorage.setItem('fleet_admin_ok', '1');
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      init();
+    } else {
+      document.getElementById('gate-status').textContent = 'Incorrect password.';
+    }
+  }
+  if (sessionStorage.getItem('fleet_admin_ok') === '1') {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    window.addEventListener('DOMContentLoaded', init);
+  }
+
+  function saveToken() {
+    const t = document.getElementById('ghtoken').value.trim();
+    if (!t) return;
+    FleetAPI.configure({ token: t });
+    document.getElementById('token-badge').textContent = 'Token set (this tab only)';
+    document.getElementById('token-badge').classList.add('set');
+    document.getElementById('ghtoken').value = '';
+  }
+
+  function init() {
+    FleetAPI.restoreToken();
+    if (FleetAPI._config.token) {
+      document.getElementById('token-badge').textContent = 'Token set (this tab only)';
+      document.getElementById('token-badge').classList.add('set');
+    }
+    const tabs = document.getElementById('vehicle-tabs');
+    tabs.innerHTML = VEHICLES.map(v =>
+      `<button data-v="${v}" onclick="switchVehicle('${v}')" class="${v===currentVehicle?'active':''}">${v}</button>`
+    ).join('');
+    loadVehicle(currentVehicle);
+  }
+
+  function switchVehicle(v) {
+    currentVehicle = v;
+    document.querySelectorAll('#vehicle-tabs button').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+    loadVehicle(v);
+  }
+
+  function setStatus(id, msg, ok) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'status ' + (ok ? 'ok' : 'err');
+  }
+
+  async function loadVehicle(v) {
+    setStatus('list-status', 'Loading...', true);
+    try {
+      const { manifest } = await FleetAPI.readManifest(v);
+      currentManifest = manifest;
+      renderRows(manifest);
+      setStatus('list-status', `Loaded ${manifest.photos.length} photos for ${v}.`, true);
+    } catch (e) {
+      setStatus('list-status', 'Error: ' + e.message, false);
+    }
+  }
+
+  function refreshCurrent() { loadVehicle(currentVehicle); }
+
+  function renderRows(manifest) {
+    const tbody = document.getElementById('photo-rows');
+    tbody.innerHTML = manifest.photos.map((p, i) => `
+      <tr>
+        <td><input type="checkbox" class="sel" data-i="${i}" style="margin-bottom:6px;display:block;">
+            ${p.src ? `<img class="thumb" src="${p.src}">` : `<span class="badge">placeholder</span>`}</td>
+        <td><input type="text" value="${(p.caption||'').replace(/"/g,'&quot;')}" onchange="editField(${i},'caption',this.value)"></td>
+        <td><input type="text" value="${(p.alt||'').replace(/"/g,'&quot;')}" onchange="editField(${i},'alt',this.value)"></td>
+        <td>
+          <select onchange="editField(${i},'size',this.value)">
+            <option value="small" ${p.size==='small'?'selected':''}>small</option>
+            <option value="normal" ${p.size==='normal'?'selected':''}>normal</option>
+            <option value="large" ${p.size==='large'?'selected':''}>large</option>
+          </select>
+        </td>
+        <td><button class="danger" onclick="deleteOne(${i})">Delete</button></td>
+      </tr>
+    `).join('');
+  }
+
+  async function editField(index, field, value) {
+    setStatus('list-status', 'Saving edit...', true);
+    try {
+      await FleetAPI.updatePhoto(currentVehicle, index, { [field]: value });
+      setStatus('list-status', 'Saved.', true);
+    } catch (e) {
+      setStatus('list-status', 'Error: ' + e.message, false);
+    }
+  }
+
+  function confirmDanger(what) {
+    const pass = prompt(`Type the confirmation passphrase to ${what}:`);
+    return pass === DANGER_PASSPHRASE;
+  }
+
+  async function deleteOne(index) {
+    if (!confirmDanger('delete this photo')) { setStatus('list-status', 'Delete cancelled — passphrase did not match.', false); return; }
+    setStatus('list-status', 'Deleting...', true);
+    try {
+      await FleetAPI.removePhoto(currentVehicle, index);
+      await loadVehicle(currentVehicle);
+    } catch (e) {
+      setStatus('list-status', 'Error: ' + e.message, false);
+    }
+  }
+
+  async function batchDeleteSelected() {
+    const indices = Array.from(document.querySelectorAll('.sel:checked')).map(el => parseInt(el.dataset.i, 10));
+    if (!indices.length) { setStatus('list-status', 'Nothing selected.', false); return; }
+    if (!confirmDanger(`delete ${indices.length} selected photo(s)`)) { setStatus('list-status', 'Batch delete cancelled — passphrase did not match.', false); return; }
+    setStatus('list-status', 'Deleting selected...', true);
+    try {
+      await FleetAPI.batchRemove(currentVehicle, indices);
+      await loadVehicle(currentVehicle);
+    } catch (e) {
+      setStatus('list-status', 'Error: ' + e.message, false);
+    }
+  }
+
+  async function addPhotoNow() {
+    const caption = document.getElementById('new-caption').value.trim();
+    const alt = document.getElementById('new-alt').value.trim();
+    const size = document.getElementById('new-size').value;
+    const fileInput = document.getElementById('new-file');
+    const file = fileInput.files[0] || null;
+    if (!caption) { setStatus('add-status', 'Caption is required.', false); return; }
+    setStatus('add-status', 'Uploading / committing...', true);
+    try {
+      await FleetAPI.addPhoto(currentVehicle, { file, caption, alt, size });
+      document.getElementById('new-caption').value = '';
+      document.getElementById('new-alt').value = '';
+      fileInput.value = '';
+      setStatus('add-status', 'Added.', true);
+      await loadVehicle(currentVehicle);
+    } catch (e) {
+      setStatus('add-status', 'Error: ' + e.message, false);
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "vehicle": "MKZ",
+  "photos": [
+    {"src": "fleet_assets/MKZ/01_MKZ_Exterior_Front.jpg", "caption": "Campaign Metallic Exterior", "alt": "2016 Lincoln MKZ Hybrid exterior front", "size": "large"},
+    {"src": "fleet_assets/MKZ/03_MKZ_Driver_Gauges.jpg", "caption": "Driver Gauges", "alt": "2016 Lincoln MKZ driver gauges", "size": "normal"},
+    {"src": null, "caption": "SYNC Touchscreen", "alt": "8-Inch SYNC Touchscreen / Center Console", "size": "normal", "placeholder_icon": "📱", "placeholder_label": "SYNC 8\" Touchscreen<br>Center Console"},
+    {"src": null, "caption": "Interior", "alt": "Interior — Premium Fabric / Miko Suede", "size": "normal", "placeholder_icon": "🪑", "placeholder_label": "Interior<br>Premium Fabric<br>Miko Suede"},
+    {"src": null, "caption": "Rear Seats", "alt": "Rear Seating Area", "size": "normal", "placeholder_icon": "🪑", "placeholder_label": "Rear Seating<br>Area"},
+    {"src": null, "caption": "Rear 3/4", "alt": "Rear 3/4 View", "size": "small", "placeholder_icon": "📸", "placeholder_label": "Rear 3/4"},
+    {"src": null, "caption": "Dashboard", "alt": "Dashboard & Instrument Cluster", "size": "small", "placeholder_icon": "🎛️", "placeholder_label": "Dashboard"},
+    {"src": null, "caption": "Odometer", "alt": "Odometer Reading", "size": "small", "placeholder_icon": "📍", "placeholder_label": "Odometer<br>~100K Miles"},
+    {"src": null, "caption": "VIN Plate", "alt": "VIN Plate / Door Jamb", "size": "small", "placeholder_icon": "🔍", "placeholder_label": "VIN / Door<br>Jamb"}
+  ],
+  "documentation": [
+    {"src": "fleet_assets/MKZ/10_Finance_Payment.jpg", "caption": "Payment Confirmation", "alt": "Zelle payment confirmation"},
+    {"src": "fleet_assets/MKZ/11_Finance_Banking.jpg", "caption": "Bank Verification", "alt": "Bank verification record"}
+  ],
+  "note": "Exterior and driver-gauges photos shown are actual vehicle. Remaining reference images faithfully represent actual vehicle color, trim, and material pending full photo shoot. Actual vehicle available for inspection at lot — Hazen, ND by appointment."
+}

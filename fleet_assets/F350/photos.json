@@ -1,0 +1,15 @@
+{
+  "vehicle": "F350",
+  "photos": [
+    {"src": "fleet_assets/F350/04_F350_Seats.jpg", "caption": "King Ranch Interior", "alt": "F-350 King Ranch interior rear bench seat", "size": "large"},
+    {"src": "fleet_assets/F350/09_F350_Extra.jpg", "caption": "Interior — Additional", "alt": "F-350 King Ranch interior additional view", "size": "normal"},
+    {"src": null, "caption": "5th Wheel Kingpin", "alt": "5th Wheel Kingpin Hitch Engaged", "size": "normal", "placeholder_icon": "🔩", "placeholder_label": "5th Wheel<br>Kingpin Hitch"},
+    {"src": null, "caption": "V10 Engine Bay", "alt": "6.8L V10 Triton Engine Bay", "size": "normal", "placeholder_icon": "⚙️", "placeholder_label": "6.8L V10<br>Engine Bay"},
+    {"src": null, "caption": "Odometer Reading", "alt": "Odometer — 47,000 Actual Miles", "size": "normal", "placeholder_icon": "📍", "placeholder_label": "Odometer<br>47,000 Miles"},
+    {"src": null, "caption": "Front 3/4", "alt": "Exterior — Front 3/4 View", "size": "small", "placeholder_icon": "📸", "placeholder_label": "Front 3/4"},
+    {"src": null, "caption": "Rear 3/4", "alt": "Rear 3/4 View — Long Bed", "size": "small", "placeholder_icon": "📸", "placeholder_label": "Rear 3/4<br>Long Bed"},
+    {"src": null, "caption": "Grille Detail", "alt": "Front Grille / Exterior Detail", "size": "small", "placeholder_icon": "📸", "placeholder_label": "Front Grille<br>Exterior"},
+    {"src": null, "caption": "Bed Cap", "alt": "Bed Cap / Cargo Bed", "size": "small", "placeholder_icon": "📦", "placeholder_label": "Bed Cap<br>Cargo Bed"}
+  ],
+  "note": "2 actual-vehicle interior photos shown — F-350 King Ranch, Douglasville GA. Full exterior/mechanical photo shoot (50–80 shots) still needed — coordinate through Sherrie Appleby before BaT or public listing. Remaining slots are placeholders, not photos."
+}
