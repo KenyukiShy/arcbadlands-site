@@ -69,18 +69,31 @@ const FleetAPI = (() => {
     return decodeURIComponent(escape(atob(str)));
   }
 
-  async function putFile(path, contentBase64, message, sha) {
+  // Every PUT re-fetches the file's current sha immediately beforehand — GitHub
+  // Contents API 409s when the sha you send is stale, and captions/manifests
+  // here can be edited from more than one tab. If the PUT still 409s (something
+  // else won the race in between our GET and our PUT), we re-GET the sha once
+  // more and retry exactly once before giving up.
+  async function attemptPut(path, contentBase64, message) {
+    const current = await getFile(path);
     const body = {
       message,
       content: contentBase64,
       branch: CONFIG.branch,
     };
-    if (sha) body.sha = sha;
-    const res = await fetch(apiUrl(path), {
+    if (current) body.sha = current.sha;
+    return fetch(apiUrl(path), {
       method: "PUT",
       headers: { ...apiHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+  }
+
+  async function putFile(path, contentBase64, message) {
+    let res = await attemptPut(path, contentBase64, message);
+    if (res.status === 409) {
+      res = await attemptPut(path, contentBase64, message);
+    }
     if (!res.ok) throw new Error(`PUT ${path} failed: ${res.status} ${await res.text()}`);
     return res.json();
   }
@@ -111,14 +124,16 @@ const FleetAPI = (() => {
     return { manifest: JSON.parse(b64DecodeUnicode(file.content)), sha: file.sha, path };
   }
 
-  async function writeManifest(vehicle, manifest, sha, message) {
+  // Note: this no longer takes a sha — putFile always re-GETs the current sha
+  // itself immediately before writing, so callers can't hand it something stale.
+  async function writeManifest(vehicle, manifest, message) {
     const path = `fleet_assets/${vehicle}/photos.json`;
     const contentB64 = b64EncodeUnicode(JSON.stringify(manifest, null, 2));
-    return putFile(path, contentB64, message || `fleet-api: update ${vehicle} manifest`, sha);
+    return putFile(path, contentB64, message || `fleet-api: update ${vehicle} manifest`);
   }
 
   async function addPhoto(vehicle, { file, caption, alt, size = "small" }) {
-    const { manifest, sha } = await readManifest(vehicle);
+    const { manifest } = await readManifest(vehicle);
     let src = null;
     if (file) {
       const filename = file.name.replace(/\s+/g, "_");
@@ -127,7 +142,7 @@ const FleetAPI = (() => {
       await putFile(src, b64, `fleet-api: add photo ${filename} to ${vehicle}`);
     }
     manifest.photos.push({ src, caption, alt: alt || caption, size });
-    await writeManifest(vehicle, manifest, sha, `fleet-api: add "${caption}" to ${vehicle} gallery`);
+    await writeManifest(vehicle, manifest, `fleet-api: add "${caption}" to ${vehicle} gallery`);
     return manifest;
   }
 
@@ -140,19 +155,19 @@ const FleetAPI = (() => {
   }
 
   async function updatePhoto(vehicle, index, patch) {
-    const { manifest, sha } = await readManifest(vehicle);
+    const { manifest } = await readManifest(vehicle);
     if (!manifest.photos[index]) throw new Error(`No photo at index ${index} for ${vehicle}`);
     Object.assign(manifest.photos[index], patch);
-    await writeManifest(vehicle, manifest, sha, `fleet-api: update photo #${index} on ${vehicle}`);
+    await writeManifest(vehicle, manifest, `fleet-api: update photo #${index} on ${vehicle}`);
     return manifest;
   }
 
   async function removePhoto(vehicle, index, { deleteFileToo = true } = {}) {
-    const { manifest, sha } = await readManifest(vehicle);
+    const { manifest } = await readManifest(vehicle);
     const entry = manifest.photos[index];
     if (!entry) throw new Error(`No photo at index ${index} for ${vehicle}`);
     manifest.photos.splice(index, 1);
-    await writeManifest(vehicle, manifest, sha, `fleet-api: remove photo #${index} from ${vehicle}`);
+    await writeManifest(vehicle, manifest, `fleet-api: remove photo #${index} from ${vehicle}`);
     if (deleteFileToo && entry.src) {
       const fileInfo = await getFile(entry.src);
       if (fileInfo) await deleteFile(entry.src, `fleet-api: delete image file for removed ${vehicle} photo`, fileInfo.sha);

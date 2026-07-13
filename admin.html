@@ -36,6 +36,13 @@
   .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#333;color:var(--muted);}
   .badge.set{background:var(--ok);color:#fff;}
   .warn{font-size:11px;color:#e0a020;background:#2e2814;padding:10px;border-radius:4px;margin-bottom:16px;}
+  .diff-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .diff-pane-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  .diff-pane{background:#151515;border:1px solid #333;border-radius:4px;padding:8px;font-size:11px;overflow:auto;max-height:420px;}
+  .diff-line{white-space:pre-wrap;word-break:break-all;padding:0 4px;line-height:1.5;}
+  .diff-add{background:#1f3a24;color:#8fd39c;}
+  .diff-del{background:#3a1f1f;color:#e0a0a0;}
+  .diff-blank{opacity:.3;}
 </style>
 </head>
 <body>
@@ -51,6 +58,7 @@
 <div id="app" style="display:none;max-width:1100px;margin:0 auto;">
   <h1>Fleet Photo Admin</h1>
   <div class="sub">Read / add / edit / remove vehicle photos — every change is a real commit to the repo.</div>
+  <div class="sub"><a href="tracker-crm.html" style="color:inherit;">→ Outreach CRM Tracker</a></div>
 
   <div class="warn">
     This page is client-side only (GitHub Pages has no server), so the password above is a UX gate,
@@ -73,16 +81,37 @@
   <div class="panel">
     <table id="photo-table">
       <thead>
-        <tr><th>Preview</th><th>Caption</th><th>Alt / Data-Caption</th><th>Size</th><th>Actions</th></tr>
+        <tr><th>Preview</th><th>Caption</th><th>Alt / Data-Caption</th><th>Size</th><th>Reorder / Swap Image</th><th>Actions</th></tr>
       </thead>
       <tbody id="photo-rows"></tbody>
     </table>
 
     <div class="row-actions" style="margin-top:14px;">
       <button class="secondary" onclick="refreshCurrent()">Reload from repo</button>
+      <button class="secondary" onclick="swapSelectedImages()">Swap Selected Images (2)</button>
       <button class="danger" onclick="batchDeleteSelected()">Delete Selected</button>
     </div>
     <div class="status" id="list-status"></div>
+  </div>
+
+  <div class="panel" id="diff-panel" style="display:none;">
+    <h3 style="margin-top:0;font-size:14px;">Review Changes</h3>
+    <div class="sub">Left is the live photos.json, fetched fresh just now. Right is that same fetch with your pending edits applied on top — nothing here comes from a cached copy.</div>
+    <div class="diff-grid">
+      <div>
+        <div class="diff-pane-label">Live (current in repo)</div>
+        <div class="diff-pane" id="diff-left"></div>
+      </div>
+      <div>
+        <div class="diff-pane-label">Pending (your edits)</div>
+        <div class="diff-pane" id="diff-right"></div>
+      </div>
+    </div>
+    <div class="row-actions" style="margin-top:14px;">
+      <button onclick="commitDiff()">Commit changes</button>
+      <button class="secondary" onclick="discardDiff()">Discard edits</button>
+    </div>
+    <div class="status" id="diff-status"></div>
   </div>
 
   <div class="panel">
@@ -120,6 +149,11 @@
   const VEHICLES = ["F350", "MKZ", "TownCar", "Jayco"];
   let currentVehicle = "F350";
   let currentManifest = null;
+  // Ordered log of staged operations, applied strictly in sequence. Once a
+  // move/swap happens, "index" only means "whatever is at that position after
+  // the ops before it" — so these can never be deduped/merged by index alone.
+  let pendingOps = [];          // [{type:'field',index,field,value} | {type:'move',index,dir} | {type:'swapImage',a,b}]
+  let diffLiveManifest = null;  // the exact live fetch the current diff/right-pane was built from
 
   function checkPassword() {
     const pw = document.getElementById('pw').value;
@@ -186,6 +220,9 @@
 
   function switchVehicle(v) {
     currentVehicle = v;
+    pendingOps = [];
+    diffLiveManifest = null;
+    document.getElementById('diff-panel').style.display = 'none';
     document.querySelectorAll('#vehicle-tabs button').forEach(b => b.classList.toggle('active', b.dataset.v === v));
     loadVehicle(v);
   }
@@ -208,10 +245,17 @@
     }
   }
 
-  function refreshCurrent() { loadVehicle(currentVehicle); }
+  function refreshCurrent() {
+    // A reload discards any unsent staged edits — it's asking for repo truth.
+    pendingOps = [];
+    diffLiveManifest = null;
+    document.getElementById('diff-panel').style.display = 'none';
+    loadVehicle(currentVehicle);
+  }
 
   function renderRows(manifest) {
     const tbody = document.getElementById('photo-rows');
+    const last = manifest.photos.length - 1;
     tbody.innerHTML = manifest.photos.map((p, i) => `
       <tr>
         <td><input type="checkbox" class="sel" data-i="${i}" style="margin-bottom:6px;display:block;">
@@ -225,23 +269,189 @@
             <option value="large" ${p.size==='large'?'selected':''}>large</option>
           </select>
         </td>
+        <td>
+          <div class="row-actions" style="margin-bottom:6px;">
+            <button class="secondary" title="Move up (keeps caption with the entry)" ${i===0?'disabled':''} onclick="moveRow(${i},-1)">&#9650;</button>
+            <button class="secondary" title="Move down (keeps caption with the entry)" ${i===last?'disabled':''} onclick="moveRow(${i},1)">&#9660;</button>
+          </div>
+          <label style="font-size:10px;color:var(--muted);display:flex;gap:4px;align-items:center;">
+            <input type="checkbox" class="swap-sel" data-i="${i}"> swap image only
+          </label>
+        </td>
         <td><button class="danger" onclick="deleteOne(${i})">Delete</button></td>
       </tr>
     `).join('');
   }
 
-  async function editField(index, field, value) {
-    setStatus('list-status', 'Saving edit...', true);
-    try {
-      await FleetAPI.updatePhoto(currentVehicle, index, { [field]: value });
-      setStatus('list-status', 'Saved.', true);
-    } catch (e) {
-      setStatus('list-status', 'Error: ' + e.message, false);
+  function renderWorkingRows() {
+    if (currentManifest) renderRows(applyPendingOps(currentManifest));
+  }
+
+  // Applies the staged op log, in order, to a manifest. 'field' edits a
+  // caption/alt/size; 'move' swaps two adjacent slots (whole entry, image +
+  // text together — this is the reorder/"listing swap"); 'swapImage' swaps
+  // only the src between two slots, leaving captions/alt/size where they are.
+  function applyPendingOps(manifest) {
+    const edited = JSON.parse(JSON.stringify(manifest));
+    for (const op of pendingOps) {
+      if (op.type === 'field') {
+        if (edited.photos[op.index]) edited.photos[op.index][op.field] = op.value;
+      } else if (op.type === 'move') {
+        const arr = edited.photos;
+        const to = op.index + op.dir;
+        if (to >= 0 && to < arr.length) {
+          const tmp = arr[op.index];
+          arr[op.index] = arr[to];
+          arr[to] = tmp;
+        }
+      } else if (op.type === 'swapImage') {
+        const a = edited.photos[op.a], b = edited.photos[op.b];
+        if (a && b) {
+          const tmpSrc = a.src;
+          a.src = b.src;
+          b.src = tmpSrc;
+        }
+      }
     }
+    return edited;
+  }
+
+  // Edits no longer commit immediately. They're staged, then rendered against
+  // a fresh fetch of the live file in the diff panel below — nothing is sent
+  // to GitHub until "Commit changes" is clicked.
+  async function editField(index, field, value) {
+    pendingOps.push({ type: 'field', index, field, value });
+    renderWorkingRows();
+    await refreshDiff();
+  }
+
+  async function moveRow(index, dir) {
+    const working = applyPendingOps(currentManifest);
+    const to = index + dir;
+    if (to < 0 || to >= working.photos.length) return;
+    pendingOps.push({ type: 'move', index, dir });
+    renderWorkingRows();
+    await refreshDiff();
+  }
+
+  async function swapSelectedImages() {
+    const indices = Array.from(document.querySelectorAll('.swap-sel:checked')).map(el => parseInt(el.dataset.i, 10));
+    if (indices.length !== 2) {
+      setStatus('list-status', 'Check exactly 2 rows\' "swap image only" boxes first.', false);
+      return;
+    }
+    pendingOps.push({ type: 'swapImage', a: indices[0], b: indices[1] });
+    renderWorkingRows();
+    await refreshDiff();
+    setStatus('list-status', 'Image swap staged — review below, then Commit.', true);
+  }
+
+  // Classic O(n*m) LCS line diff — manifests are small JSON files so this is cheap.
+  function diffLines(oldLines, newLines) {
+    const n = oldLines.length, m = newLines.length;
+    const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        dp[i][j] = oldLines[i] === newLines[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+    const ops = [];
+    let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (oldLines[i] === newLines[j]) { ops.push({ type: 'same', left: oldLines[i], right: newLines[j] }); i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ type: 'del', left: oldLines[i], right: null }); i++; }
+      else { ops.push({ type: 'add', left: null, right: newLines[j] }); j++; }
+    }
+    while (i < n) { ops.push({ type: 'del', left: oldLines[i], right: null }); i++; }
+    while (j < m) { ops.push({ type: 'add', left: null, right: newLines[j] }); j++; }
+    return ops;
+  }
+
+  function escapeHtml(s) {
+    return (s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function renderDiff(liveManifest, editedManifest) {
+    const leftText = JSON.stringify(liveManifest, null, 2);
+    const rightText = JSON.stringify(editedManifest, null, 2);
+    const ops = diffLines(leftText.split('\n'), rightText.split('\n'));
+    const leftHtml = ops.map(op => op.type === 'add'
+      ? `<div class="diff-line diff-blank">&nbsp;</div>`
+      : `<div class="diff-line${op.type === 'del' ? ' diff-del' : ''}">${escapeHtml(op.left)}</div>`
+    ).join('');
+    const rightHtml = ops.map(op => op.type === 'del'
+      ? `<div class="diff-line diff-blank">&nbsp;</div>`
+      : `<div class="diff-line${op.type === 'add' ? ' diff-add' : ''}">${escapeHtml(op.right)}</div>`
+    ).join('');
+    document.getElementById('diff-left').innerHTML = leftHtml;
+    document.getElementById('diff-right').innerHTML = rightHtml;
+    document.getElementById('diff-panel').style.display = 'block';
+  }
+
+  // Re-fetches the live file fresh (this IS the left pane — never a cached
+  // "master" copy) and rebuilds the right pane from that same fetch plus the
+  // pending edits, then re-renders the diff.
+  async function refreshDiff() {
+    if (!pendingOps.length) {
+      diffLiveManifest = null;
+      document.getElementById('diff-panel').style.display = 'none';
+      return;
+    }
+    setStatus('diff-status', 'Fetching live photos.json for comparison...', true);
+    try {
+      const { manifest: liveManifest } = await FleetAPI.readManifest(currentVehicle);
+      diffLiveManifest = liveManifest;
+      const editedManifest = applyPendingOps(liveManifest);
+      renderDiff(liveManifest, editedManifest);
+      setStatus('diff-status', 'Review the highlighted changes, then Commit.', true);
+    } catch (e) {
+      setStatus('diff-status', 'Error fetching live file: ' + e.message, false);
+    }
+  }
+
+  async function commitDiff() {
+    if (!diffLiveManifest || !pendingOps.length) {
+      setStatus('diff-status', 'Nothing staged to commit.', false);
+      return;
+    }
+    setStatus('diff-status', 'Committing diff-approved version...', true);
+    try {
+      // Rebuild from diffLiveManifest (the exact fetch the right pane was
+      // shown against) so what's committed is precisely what was reviewed.
+      // writeManifest re-GETs the sha itself immediately before the PUT and
+      // retries once on 409, so this can't fail on a stale sha.
+      const editedManifest = applyPendingOps(diffLiveManifest);
+      await FleetAPI.writeManifest(currentVehicle, editedManifest, `fleet-api: apply diff-approved edits to ${currentVehicle} manifest`);
+      pendingOps = [];
+      diffLiveManifest = null;
+      document.getElementById('diff-panel').style.display = 'none';
+      setStatus('diff-status', 'Committed.', true);
+      await loadVehicle(currentVehicle);
+    } catch (e) {
+      setStatus('diff-status', 'Error: ' + e.message, false);
+    }
+  }
+
+  async function discardDiff() {
+    pendingOps = [];
+    diffLiveManifest = null;
+    document.getElementById('diff-panel').style.display = 'none';
+    setStatus('diff-status', '', true);
+    await loadVehicle(currentVehicle);
   }
 
   function confirmDanger(what) {
     return SiteAuth.confirmDanger(what);
+  }
+
+  // Delete commits immediately (existing behavior, separate from the staged
+  // diff flow) and changes the array shape, which would invalidate any
+  // in-flight staged ops' index assumptions — so drop those rather than let
+  // them silently misapply to the wrong row on the next diff/commit.
+  function discardPendingOpsSilently() {
+    pendingOps = [];
+    diffLiveManifest = null;
+    document.getElementById('diff-panel').style.display = 'none';
   }
 
   async function deleteOne(index) {
@@ -249,6 +459,7 @@
     setStatus('list-status', 'Deleting...', true);
     try {
       await FleetAPI.removePhoto(currentVehicle, index);
+      discardPendingOpsSilently();
       await loadVehicle(currentVehicle);
     } catch (e) {
       setStatus('list-status', 'Error: ' + e.message, false);
@@ -262,6 +473,7 @@
     setStatus('list-status', 'Deleting selected...', true);
     try {
       await FleetAPI.batchRemove(currentVehicle, indices);
+      discardPendingOpsSilently();
       await loadVehicle(currentVehicle);
     } catch (e) {
       setStatus('list-status', 'Error: ' + e.message, false);

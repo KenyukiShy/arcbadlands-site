@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>AutoBäad Outreach Tracker v2</title>
+<style>
+:root{
+  --navy:#1b2b4b; --navy2:#243a63; --gold:#b8860b; --green:#1a5c38; --red:#8b1a1a;
+  --orange:#c96a00; --gray:#4a4a4a; --lgray:#d8d8d8; --llgray:#f2f2f2; --bg:#f7f6f3;
+  --white:#fff; --mint:#ebf5ee; --goldbg:#fdf6e3; --blue:#ebf0f8;
+  --nd-accent:#2c5f8a; --ga-accent:#2e7d32;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:#222;
+  padding:0 0 60px 0;
+}
+/* TOP BAR */
+.topbar{
+  background:linear-gradient(135deg,var(--navy),var(--navy2)); color:#fff;
+  padding:18px 24px 14px; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,.3);
+}
+.topbar h1{margin:0 0 3px; font-size:20px; letter-spacing:.3px;}
+.topbar .sub{font-size:12px; color:#cdd6e8;}
+
+/* LAYOUT: main area + sidebar */
+.outer{display:flex; gap:0; min-height:calc(100vh - 60px);}
+.main-col{flex:1; min-width:0; padding:16px 16px 40px;}
+.sidebar{
+  width:320px; min-width:300px; background:#fff; border-left:1px solid var(--lgray);
+  padding:16px 14px; position:sticky; top:60px; height:calc(100vh - 60px);
+  overflow-y:auto; flex-shrink:0;
+}
+@media(max-width:900px){
+  .outer{flex-direction:column;}
+  .sidebar{width:100%; position:static; height:auto; border-left:none; border-top:1px solid var(--lgray);}
+}
+
+/* REGION GATE */
+.region-gate{
+  background:#fff; border:2px solid var(--lgray); border-radius:10px;
+  padding:28px 24px; text-align:center; margin-bottom:18px;
+}
+.region-gate h2{margin:0 0 8px; color:var(--navy); font-size:18px;}
+.region-gate p{margin:0 0 18px; color:var(--gray); font-size:14px;}
+.region-btns{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
+.region-btn{
+  padding:12px 28px; border:2px solid; border-radius:8px; font-size:15px;
+  font-weight:bold; cursor:pointer; background:#fff; transition:all .2s;
+}
+.region-btn.nd{border-color:var(--nd-accent); color:var(--nd-accent);}
+.region-btn.ga{border-color:var(--ga-accent); color:var(--ga-accent);}
+.region-btn.nd:hover,.region-btn.nd.active{background:var(--nd-accent); color:#fff;}
+.region-btn.ga:hover,.region-btn.ga.active{background:var(--ga-accent); color:#fff;}
+
+/* CAT GATE (shows after region) */
+.cat-gate{
+  display:none; background:#fff; border:1px solid var(--lgray); border-radius:8px;
+  padding:18px 20px; margin-bottom:18px; text-align:center;
+}
+.cat-gate.visible{display:block;}
+.cat-gate h3{margin:0 0 12px; color:var(--navy); font-size:16px;}
+.cat-btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.cat-btn{
+  padding:8px 20px; border:1.5px solid var(--lgray); border-radius:6px; font-size:13px;
+  font-weight:bold; cursor:pointer; background:#fff; color:var(--gray); transition:all .15s;
+}
+.cat-btn:hover{border-color:var(--navy); color:var(--navy);}
+.cat-btn.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+.cat-btn.active.consignment{background:var(--green); border-color:var(--green);}
+.cat-btn.active.auction{background:var(--red); border-color:var(--red);}
+.cat-btn.active.direct{background:var(--orange); border-color:var(--orange);}
+
+/* CONTENT AREA (hidden until gated) */
+.content-area{display:none;}
+.content-area.visible{display:block;}
+
+/* INTRO */
+.intro{
+  background:var(--white); border:1px solid var(--lgray); border-left:6px solid var(--gold);
+  border-radius:6px; padding:14px 16px; margin-bottom:14px; font-size:13.5px; line-height:1.5;
+}
+.intro h2{margin:0 0 6px; font-size:15px; color:var(--navy);}
+
+/* CONTROLS */
+.controls{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;}
+button.ctl{
+  background:var(--navy); color:#fff; border:none; padding:8px 13px; border-radius:5px;
+  font-size:12.5px; cursor:pointer; font-weight:bold;
+}
+button.ctl.alt{background:#fff; color:var(--navy); border:1px solid var(--navy);}
+button.ctl:hover{opacity:.88;}
+select.filter{padding:7px 9px; border-radius:5px; border:1px solid var(--lgray); font-size:12.5px;}
+.savebadge{font-size:12px; color:var(--green); margin-left:auto; opacity:0; transition:opacity .3s;}
+.savebadge.show{opacity:1;}
+
+/* SUMMARY TABLE */
+.tablewrap{overflow-x:auto; background:#fff; border:1px solid var(--lgray); border-radius:6px; margin-bottom:18px;}
+table.summary{width:100%; border-collapse:collapse; font-size:12px;}
+table.summary th{
+  background:var(--navy); color:#fff; text-align:left; padding:7px 9px;
+}
+table.summary td{padding:6px 9px; border-bottom:1px solid var(--llgray); vertical-align:middle;}
+table.summary tr:hover{background:var(--llgray); cursor:pointer;}
+.pill{display:inline-block; padding:2px 7px; border-radius:10px; font-size:10.5px; font-weight:bold; color:#fff;}
+.tag-truck{background:var(--navy);} .tag-camper{background:var(--orange);}
+.tag-both{background:var(--green);} .tag-towncar{background:#5a2d82;} .tag-mkz{background:#1a6b8a;}
+.tag-tier1{background:#1a5c38;} .tag-tier2{background:#c96a00;} .tag-tier3{background:#8b1a1a;}
+.tag-consignment{background:#1a5c38;} .tag-auction{background:#8b1a1a;} .tag-direct{background:#c96a00;}
+
+/* GROUP HEADERS */
+.grouphead{
+  font-size:14px; font-weight:bold; color:var(--navy); margin:18px 0 7px; padding-bottom:5px;
+  border-bottom:2px solid var(--navy);
+}
+.grouphead.nd{color:var(--nd-accent); border-color:var(--nd-accent);}
+.grouphead.ga{color:var(--ga-accent); border-color:var(--ga-accent);}
+.grouphead.both{color:#5a3a00; border-color:#5a3a00;}
+
+/* CARDS */
+.card{
+  background:#fff; border:1px solid var(--lgray); border-radius:6px; margin-bottom:8px; overflow:hidden;
+}
+.card.highlight-consignment{border-left:4px solid var(--green);}
+.card.highlight-auction{border-left:4px solid var(--red);}
+.card.highlight-direct{border-left:4px solid var(--orange);}
+.card.highlight-both{border-left:4px solid var(--navy);}
+.card-head{
+  display:flex; justify-content:space-between; align-items:center; padding:11px 15px; cursor:pointer; gap:8px;
+}
+.card-head:hover{background:var(--llgray);}
+.card-title{font-weight:bold; font-size:13.5px; color:var(--navy);}
+.card-meta{font-size:11.5px; color:var(--gray);}
+.card-right{display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end;}
+.chev{font-size:12px; color:var(--gray); transition:transform .2s;}
+.card.open .chev{transform:rotate(90deg);}
+.card-body{display:none; padding:0 16px 16px;}
+.card.open .card-body{display:block;}
+
+/* STATUS PILLS */
+.statuspill{padding:2px 8px; border-radius:10px; font-size:10.5px; font-weight:bold; color:#fff;}
+.stat-notstarted{background:#888;} .stat-contacted{background:#3a6ea5;}
+.stat-followup{background:#c96a00;} .stat-appraisal{background:#9b6b00;}
+.stat-offer{background:#5a8f3c;} .stat-negotiating{background:#b8860b;}
+.stat-contract{background:#1a5c38;} .stat-closing{background:#0e7a6e;}
+.stat-closed{background:#145214;} .stat-payment{background:#0a3d0a;}
+.stat-dead{background:#8b1a1a;}
+
+/* CARD BODY CONTENT */
+.kv{display:grid; grid-template-columns:130px 1fr; gap:3px 8px; font-size:12.5px; margin-bottom:8px;}
+.kv div.k{font-weight:bold; color:var(--gray);}
+.kv div.v{color:#222;}
+h3.sec{font-size:12px; color:var(--gray); text-transform:uppercase; letter-spacing:.4px; margin:14px 0 6px; border-top:1px solid var(--llgray); padding-top:10px;}
+ul.tp{margin:0 0 4px; padding-left:18px; font-size:13px; line-height:1.5;}
+ul.tp li{margin-bottom:3px;}
+
+.smsbox{border:1px solid var(--lgray); border-radius:6px; overflow:hidden; margin-bottom:8px;}
+.smsbox .lbl{padding:6px 11px; font-size:12px; font-weight:bold; color:#fff;}
+.smsbox .msg{padding:9px 11px; font-size:12.5px; background:var(--mint); white-space:pre-wrap; line-height:1.45;}
+.smsbox .att{padding:5px 11px; font-size:11px; font-style:italic; color:var(--gray); background:var(--llgray); display:flex; justify-content:space-between; align-items:center;}
+.copybtn{background:var(--navy); color:#fff; border:none; padding:3px 9px; border-radius:4px; font-size:10.5px; cursor:pointer;}
+.copybtn:hover{opacity:.85;}
+
+/* STATUS GRID */
+.statusgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; margin-bottom:4px;}
+@media(max-width:600px){.statusgrid{grid-template-columns:1fr;}}
+.field{display:flex; flex-direction:column; gap:2px;}
+.field label{font-size:11px; font-weight:bold; color:var(--gray); text-transform:uppercase; letter-spacing:.3px;}
+.field select, .field textarea{
+  padding:6px 7px; border:1px solid var(--lgray); border-radius:4px; font-size:12.5px; font-family:inherit; width:100%;
+}
+.field textarea{min-height:58px; resize:vertical;}
+.hint{font-size:10.5px; color:#888; font-style:italic; margin-top:2px;}
+.con-pre{
+  background:var(--goldbg); border:1px solid #e8d080; border-radius:4px;
+  padding:8px 10px; font-size:12px; margin-top:6px; color:#5a4000;
+}
+
+/* CONTRACT TABLE */
+.contract-table{width:100%; border-collapse:collapse; font-size:12px; margin-top:6px;}
+.contract-table th{background:var(--navy); color:#fff; padding:6px 8px; text-align:left;}
+.contract-table td{padding:5px 8px; border-bottom:1px solid var(--llgray);}
+.contract-table tr:nth-child(even){background:var(--llgray);}
+
+/* SIDEBAR */
+.sidebar h2{font-size:15px; color:var(--navy); margin:0 0 4px;}
+.sidebar .sub{font-size:11.5px; color:var(--gray); margin-bottom:14px;}
+.sb-tabs{display:flex; gap:4px; margin-bottom:12px; flex-wrap:wrap;}
+.sb-tab{
+  padding:5px 10px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;
+  border:1px solid var(--lgray); background:#fff; color:var(--gray); transition:all .15s;
+}
+.sb-tab:hover{border-color:var(--navy); color:var(--navy);}
+.sb-tab.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+.sb-panel{display:none;}
+.sb-panel.active{display:block;}
+
+.vh-card{border:1px solid var(--lgray); border-radius:6px; margin-bottom:10px; overflow:hidden;}
+.vh-head{padding:8px 11px; font-weight:bold; font-size:13px; color:#fff;}
+.vh-body{padding:10px 11px; font-size:12px; line-height:1.6;}
+.vh-body .row{display:grid; grid-template-columns:110px 1fr; gap:2px 6px; margin-bottom:3px;}
+.vh-body .row .lbl{font-weight:bold; color:var(--gray);}
+.vh-body .row .val{color:#222;}
+.vh-tip{
+  background:var(--goldbg); border-left:3px solid var(--gold); border-radius:3px;
+  padding:6px 9px; font-size:11.5px; color:#5a4000; margin-top:8px; font-style:italic;
+}
+
+/* LEGEND */
+.legend{margin-top:4px;}
+.leg-item{display:flex; align-items:flex-start; gap:8px; margin-bottom:10px;}
+.leg-badge{
+  flex-shrink:0; width:68px; text-align:center; padding:3px 6px; border-radius:4px;
+  font-size:11px; font-weight:bold; color:#fff;
+}
+.leg-txt{font-size:12px; line-height:1.45; color:#333;}
+.leg-section{font-size:12px; font-weight:bold; color:var(--navy); margin:12px 0 6px; border-top:1px solid var(--lgray); padding-top:8px;}
+
+/* CONTRACT MODAL */
+.contract-section{
+  background:#fff; border:1px solid var(--lgray); border-radius:6px;
+  padding:14px 16px; margin-bottom:14px;
+}
+.contract-section h3{margin:0 0 10px; color:var(--navy); font-size:14px;}
+
+/* PRE-CONTRACT / POST-CONTRACT STAGES */
+.stage-pipeline{display:flex; flex-wrap:wrap; gap:4px; margin:8px 0;}
+.stage-dot{
+  padding:3px 10px; border-radius:12px; font-size:11px; font-weight:bold; color:#fff;
+  cursor:default;
+}
+.stage-active{opacity:1; box-shadow:0 0 0 2px #fff, 0 0 0 4px var(--gold);}
+.stage-inactive{opacity:.45;}
+
+footer.note{max-width:100%; margin:30px 16px 0; padding:0; font-size:11.5px; color:#888; text-align:center;}
+
+/* ── AUTH GATE ── */
+#authGate{
+  position:fixed; inset:0; background:linear-gradient(135deg,#1b2b4b,#243a63);
+  display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px;
+}
+#authGate.hidden{display:none;}
+.auth-box{
+  background:#fff; border-radius:10px; padding:32px 28px; width:100%; max-width:360px;
+  box-shadow:0 10px 40px rgba(0,0,0,.4); text-align:center;
+}
+.auth-box h2{margin:0 0 6px; color:#1b2b4b; font-size:19px;}
+.auth-box p.sub{margin:0 0 20px; color:#666; font-size:12.5px; line-height:1.5;}
+.auth-box select, .auth-box input{
+  width:100%; padding:10px 11px; border:1px solid #d8d8d8; border-radius:6px;
+  font-size:14px; margin-bottom:12px; font-family:inherit; box-sizing:border-box;
+}
+.auth-box input[type="checkbox"]{width:auto; margin:0 6px 0 0; padding:0; vertical-align:middle;}
+.auth-box .auth-roles{text-align:left; margin-bottom:12px; font-size:13px; color:#444;}
+.auth-box .auth-link{margin:14px 0 0; font-size:12.5px;}
+.auth-box .auth-link a{color:#1b2b4b;}
+.auth-box .auth-success{color:#1b6b3a;}
+.auth-box button{
+  width:100%; padding:11px; background:#1b2b4b; color:#fff; border:none; border-radius:6px;
+  font-size:14px; font-weight:bold; cursor:pointer;
+}
+.auth-box button:hover{opacity:.9;}
+.auth-box button:disabled{opacity:.5; cursor:not-allowed;}
+.auth-err{color:#8b1a1a; font-size:12.5px; margin:-4px 0 12px; min-height:16px;}
+.auth-step{display:none;}
+.auth-step.active{display:block;}
+</style>
+</head>
+<body>
+
+<!-- ── AUTH GATE ── -->
+<div id="authGate">
+  <div class="auth-box">
+    <h2>🛻🏕️ AutoBäad Tracker</h2>
+    <p class="sub">Team access only. Log in to continue.</p>
+
+    <!-- Step 1: login -->
+    <div class="auth-step active" id="authStepLogin">
+      <input type="text" id="authLoginName" placeholder="Full name" autocomplete="username">
+      <input type="password" id="authLoginPassword" placeholder="Password" autocomplete="current-password">
+      <div class="auth-err" id="authLoginErr"></div>
+      <button id="authLoginBtn">Log In</button>
+      <p class="sub auth-link">New here? <a href="#" id="authShowRequest">Request access</a></p>
+    </div>
+
+    <!-- Step 2: request access -->
+    <div class="auth-step" id="authStepRequest">
+      <div id="authRequestForm">
+        <p class="sub">Request an account. An owner will review it and email you a temporary password.</p>
+        <input type="text" id="reqName" placeholder="Full name" autocomplete="name">
+        <input type="email" id="reqEmail" placeholder="Email" autocomplete="email">
+        <input type="tel" id="reqPhone" placeholder="Phone" autocomplete="tel">
+        <div class="auth-roles">
+          <label style="display:block; margin-bottom:4px;"><input type="checkbox" id="reqRoleTracker" checked> Tracker access</label>
+          <label style="display:block;"><input type="checkbox" id="reqRoleModerator"> Moderator access</label>
+        </div>
+        <div class="auth-err" id="authRequestErr"></div>
+        <button id="authRequestBtn">Submit Request</button>
+      </div>
+      <div id="authRequestSuccess" style="display:none;">
+        <p class="sub auth-success">Request submitted. You'll be emailed a temporary password once an owner approves it.</p>
+      </div>
+      <p class="sub auth-link"><a href="#" id="authShowLoginFromRequest">Back to login</a></p>
+    </div>
+
+    <!-- Step 3: forced password change, first login on a temp password -->
+    <div class="auth-step" id="authStepComplete">
+      <p class="sub">First login — set your own password and confirm your contact info.</p>
+      <input type="password" id="completeNewPassword" placeholder="New password" autocomplete="new-password">
+      <input type="password" id="completeNewPassword2" placeholder="Confirm new password" autocomplete="new-password">
+      <input type="email" id="completeEmail" placeholder="Email" autocomplete="email">
+      <input type="tel" id="completePhone" placeholder="Phone" autocomplete="tel">
+      <div class="auth-err" id="authCompleteErr"></div>
+      <button id="authCompleteBtn">Set Password &amp; Enter</button>
+      <p class="sub auth-link"><a href="#" id="authShowLoginFromComplete">Back to login</a></p>
+    </div>
+  </div>
+</div>
+
+<div class="topbar">
+  <h1>🛻🏕️ AutoBäad Outreach Tracker</h1>
+  <div class="sub">Shared live status board — Kenyon, Sherrie, Doug, Charles, Cynthia. Changes save automatically across all users.</div>
+</div>
+
+<div class="outer">
+<div class="main-col">
+
+  <!-- ── REGION GATE ── -->
+  <div class="region-gate" id="regionGate">
+    <h2>Select Region to Begin</h2>
+    <p>Vehicle inventory is split by region. Choose which market you are working today.</p>
+    <div id="regionGateLoading" style="color:#888;font-size:13px;">Loading engagement data…</div>
+    <div class="region-btns" id="regionBtns" style="display:none;">
+      <button class="region-btn nd" onclick="selectRegion('nd')">🏔️ North Dakota &amp; Surrounding<br><small>Town Car · MKZ</small></button>
+      <button class="region-btn ga" onclick="selectRegion('ga')">🌿 Georgia &amp; Surrounding<br><small>F-350 King Ranch · Jayco Eagle HT</small></button>
+    </div>
+  </div>
+
+  <!-- ── CAT GATE ── -->
+  <div class="cat-gate" id="catGate">
+    <h3 id="catGateTitle">Select Category</h3>
+    <div class="cat-btns" id="catBtns"></div>
+  </div>
+
+  <!-- ── MAIN CONTENT ── -->
+  <div class="content-area" id="contentArea">
+
+    <div class="intro" id="introBox">
+      <h2>General Introduction — applies to all engagements</h2>
+      <span id="introText"></span>
+    </div>
+
+    <div class="controls">
+      <button class="ctl" id="expandAllBtn">Expand All</button>
+      <button class="ctl alt" id="collapseAllBtn">Collapse All</button>
+      <button class="ctl alt" onclick="selectRegion(null)">← Change Region</button>
+      <select class="filter" id="filterAssigned">
+        <option value="all">Anyone Assigned</option>
+        <option value="Kenyon">Kenyon</option>
+        <option value="Sherrie">Sherrie</option>
+        <option value="Doug">Doug</option>
+        <option value="Charles">Charles</option>
+        <option value="Cynthia">Cynthia</option>
+        <option value="Unassigned">Unassigned</option>
+      </select>
+      <span class="savebadge" id="saveBadge">✓ Saved</span>
+    </div>
+
+    <!-- Contract summary table -->
+    <div class="contract-section" id="contractSection">
+      <h3>📋 Contract &amp; Pipeline Summary</h3>
+      <div class="tablewrap">
+        <table class="summary" id="summaryTable">
+          <thead>
+            <tr>
+              <th>Engagement</th><th>Vehicle</th><th>Type</th><th>Tier</th><th>Phone</th><th>Assigned</th><th>Stage</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="cardsContainer"></div>
+
+  </div><!-- /content-area -->
+
+</div><!-- /main-col -->
+
+<!-- ── RIGHT SIDEBAR ── -->
+<div class="sidebar">
+  <h2>Reference Panel</h2>
+  <div class="sub" id="sidebarContext">Select a region and engagement to see details.</div>
+
+  <div class="sb-tabs">
+    <div class="sb-tab active" onclick="sbTab('vehicles')">Vehicles</div>
+    <div class="sb-tab" onclick="sbTab('legend')">Legend</div>
+    <div class="sb-tab" onclick="sbTab('contacts')">Contacts</div>
+  </div>
+
+  <!-- VEHICLES PANEL -->
+  <div class="sb-panel active" id="panel-vehicles">
+    <div id="vehicleCards">
+      <p style="font-size:12px;color:#888;">Select a region to see vehicle details.</p>
+    </div>
+  </div>
+
+  <!-- LEGEND PANEL -->
+  <div class="sb-panel" id="panel-legend">
+    <div class="legend">
+      <div class="leg-section">Channel Priority Tiers</div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#1a5c38;">Tier 1</div>
+        <div class="leg-txt"><strong>They come to you.</strong> Photographer/appraiser dispatched to your location at no charge. Highest leverage — start here.</div>
+      </div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#c96a00;">Tier 2</div>
+        <div class="leg-txt"><strong>Fee or transport required.</strong> They dispatch with a charge, or they'll appraise if you bring the vehicle to them. Work in parallel with Tier 1.</div>
+      </div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#8b1a1a;">Tier 3</div>
+        <div class="leg-txt"><strong>You do all the work.</strong> Self-submit, auction lotting, or direct sale where you coordinate photography, transport, and listing. Last resort or parallel fallback.</div>
+      </div>
+
+      <div class="leg-section">Channel Types</div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#1a5c38;">Consignment</div>
+        <div class="leg-txt">Dealer lists your vehicle on consignment. You retain ownership until sale. Best for maximizing net return.</div>
+      </div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#8b1a1a;">Auction</div>
+        <div class="leg-txt">Hard cash close at live or online auction. Fastest liquidity but lowest ceiling. BaT (Bring a Trailer) is a premium online auction with collector buyers.</div>
+      </div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#c96a00;">Direct Sale</div>
+        <div class="leg-txt">Dealer or private buyer purchases outright. Fastest transaction but typically a wholesale floor. Use as a floor number, not a target.</div>
+      </div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#1b2b4b;">BaT Proxy</div>
+        <div class="leg-txt">Dealer manages your Bring a Trailer listing, photography, write-up, and Q&A. You get BaT exposure without self-submitting. Usually bundled with consignment.</div>
+      </div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#555;">Self-Submit</div>
+        <div class="leg-txt">You build the listing yourself (BaT, RV Trader, etc.). Full control but 100% on you for photos, copy, Q&A, and logistics.</div>
+      </div>
+
+      <div class="leg-section">Regions</div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#2c5f8a;">ND Region</div>
+        <div class="leg-txt">North Dakota &amp; surrounding — Town Car (Hazen ND) and MKZ (Beulah ND, at Lucky's Towing). Auction houses: Resource Auction, Ulmer, Steffes, Neumiller.</div>
+      </div>
+      <div class="leg-item">
+        <div class="leg-badge" style="background:#2e7d32;">GA Region</div>
+        <div class="leg-txt">Georgia &amp; surrounding — F-350 King Ranch and Jayco Eagle HT both stored in Douglasville GA. On-site contacts: Sherrie &amp; Doug Appleby.</div>
+      </div>
+
+      <div class="leg-section">Pipeline Stages</div>
+      <div style="font-size:11.5px;line-height:2;color:#333;">
+        <span class="statuspill stat-notstarted">Not Started</span> →
+        <span class="statuspill stat-contacted">Contacted</span> →
+        <span class="statuspill stat-followup">Follow-up Sched.</span> →
+        <span class="statuspill stat-appraisal">Appraisal Done</span> →
+        <span class="statuspill stat-offer">Offer Received</span> →
+        <span class="statuspill stat-negotiating">Negotiating</span> →
+        <span class="statuspill stat-contract">Contract Sent</span> →
+        <span class="statuspill stat-contract">Contract Signed</span> →
+        <span class="statuspill stat-closing">Closing Sched.</span> →
+        <span class="statuspill stat-closed">Closed/Sold</span> →
+        <span class="statuspill stat-payment">Payment Recv'd</span>
+        <br><span class="statuspill stat-dead">Declined/Dead</span> — use if engagement is terminated
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACTS PANEL — fetched live from the server, never stored in this repo -->
+  <div class="sb-panel" id="panel-contacts">
+    <div class="sub" style="font-size:11px;color:#888;margin-bottom:8px;">Fetched live from Secret Manager on every load — nothing here lives in this repo.</div>
+    <div id="contactsContent" style="font-size:12px;color:#888;">Loading contacts…</div>
+  </div>
+
+</div><!-- /sidebar -->
+</div><!-- /outer -->
+
+<footer class="note">AutoBäad / Arc Badlands Compute LLC liquidation tracker · Kenyon Jones, Hazen ND · Data shared across all users viewing this page.</footer>
+
+<script src="assets/site-auth.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════
+// window.storage SHIM — this file is now hosted on GitHub Pages,
+// not run as a Claude Artifact, so the real window.storage API
+// doesn't exist. This redirects the same get/set calls used
+// throughout this file to a Firestore-backed endpoint instead.
+// API base comes from site-auth.js (shared with admin.html /
+// tracker.html / autobad.html) rather than a second hardcoded
+// literal, so a future Cloud Run URL change is a one-file edit.
+// ═══════════════════════════════════════════════════════════
+const TRACKER_API_BASE = SiteAuth.getApiBase() + "/tracker-storage";
+
+// Shared key gating tracker-storage's endpoints (see arc-engine's
+// tracker_storage.py). Fetched from the unauthenticated /client-key
+// bootstrap endpoint rather than hardcoded here — this repo is public,
+// so a literal key value in this file would sit in git history forever.
+// The bootstrap endpoint doesn't add real access control (anyone who can
+// call it can call every other tracker-storage route just as easily) —
+// its only job is keeping the actual key value out of this committed file
+// so it can be rotated without a site redeploy. Resolved once at load
+// time by bootstrapTrackerKey(), kept in memory only (not sessionStorage).
+let TRACKER_KEY = null;
+
+async function bootstrapTrackerKey(){
+  try{
+    const res = await fetch(`${TRACKER_API_BASE}/client-key`);
+    if(!res.ok) throw new Error(`client-key fetch failed: ${res.status}`);
+    const data = await res.json();
+    TRACKER_KEY = data.key;
+  }catch(e){
+    console.error("bootstrapTrackerKey error", e);
+  }
+}
+
+window.storage = {
+  async get(key, shared){
+    try{
+      const res = await fetch(`${TRACKER_API_BASE}/${encodeURIComponent(key)}`, {
+        headers: {"X-Tracker-Key": TRACKER_KEY}
+      });
+      if(res.status === 404) return null;
+      if(!res.ok) throw new Error(`storage.get failed: ${res.status}`);
+      return await res.json();
+    }catch(e){ console.error("storage.get error", e); return null; }
+  },
+  async set(key, value, shared){
+    try{
+      const res = await fetch(`${TRACKER_API_BASE}/${encodeURIComponent(key)}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-Tracker-Key": TRACKER_KEY},
+        body: JSON.stringify({value})
+      });
+      if(!res.ok) throw new Error(`storage.set failed: ${res.status}`);
+      return await res.json();
+    }catch(e){ console.error("storage.set error", e); return null; }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════
+const PEOPLE = ["Unassigned","Kenyon","Sherrie","Doug","Charles","Cynthia","Justin"];
+const STAGES = [
+  "Not Started","Contacted","Follow-up Scheduled","Appraisal / Photography Done",
+  "Offer Received","Negotiating","Contract Sent","Contract Signed",
+  "Closing Scheduled","Closed / Sold","Payment Received","Declined / Dead"
+];
+const STAGE_CLASS = {
+  "Not Started":"stat-notstarted","Contacted":"stat-contacted","Follow-up Scheduled":"stat-followup",
+  "Appraisal / Photography Done":"stat-appraisal","Offer Received":"stat-offer","Negotiating":"stat-negotiating",
+  "Contract Sent":"stat-contract","Contract Signed":"stat-contract","Closing Scheduled":"stat-closing",
+  "Closed / Sold":"stat-closed","Payment Received":"stat-payment","Declined / Dead":"stat-dead"
+};
+const FOLLOWUP_TYPES = [
+  "— none yet —",
+  "Photography — they dispatch, no charge (Tier 1)",
+  "Photography — they dispatch, with fee (Tier 2)",
+  "Appraisal — we tow/drive to them",
+  "Appraisal — remote from photos/video",
+  "BaT listing write-up review",
+  "Negotiation call / counter-offer",
+  "Consignment agreement / paperwork",
+  "Auction submission / lotting",
+  "Pre-auction inspection appointment",
+  "Pre-contract title review",
+  "Direct sale meeting / walkthrough",
+  "Transport / logistics coordination",
+  "Title & payment coordination",
+  "Post-sale payment confirmation",
+  "Other / custom"
+];
+
+
+// ═══════════════════════════════════════════════════════════
+// ENGAGEMENT DATA — fetched live from /tracker-storage/engagements,
+// gated by X-Tracker-Key + this user's own tracker password (same
+// pattern as the CONTACTS PANEL further down). Replaces what used to
+// be a hardcoded array of dealer/auction-house names, phone numbers,
+// addresses, and VINs — nothing here is ever committed to the repo.
+// ═══════════════════════════════════════════════════════════
+let ENGAGEMENTS = [];
+
+async function loadEngagements(password){
+  const loadingEl = document.getElementById("regionGateLoading");
+  const btnsEl = document.getElementById("regionBtns");
+  if(!password){
+    loadingEl.innerHTML = '<p style="color:#8b1a1a;">No password available to load engagement data — please log in again.</p>';
+    return;
+  }
+  try{
+    const res = await fetch(`${TRACKER_API_BASE}/engagements?password=${encodeURIComponent(password)}`, {
+      headers: {"X-Tracker-Key": TRACKER_KEY}
+    });
+    if(res.status === 404){
+      loadingEl.innerHTML = '<p style="color:#888;">Engagements endpoint isn\'t deployed yet — check /tracker-storage/engagements on commplex-api.</p>';
+      return;
+    }
+    if(!res.ok){
+      throw new Error(`${res.status}: ${await res.text()}`);
+    }
+    const data = await res.json();
+    if(!Array.isArray(data)) throw new Error("expected an array of engagements");
+    ENGAGEMENTS = data;
+    loadingEl.style.display = "none";
+    btnsEl.style.display = "flex";
+  }catch(e){
+    console.error("loadEngagements error", e);
+    loadingEl.innerHTML = `<p style="color:#8b1a1a;">Could not load engagement data (${esc_(String(e.message || e))}). The endpoint may not be deployed yet.</p>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// VEHICLE SIDEBAR DATA
+// ═══════════════════════════════════════════════════════════
+const VEHICLE_CARDS = {
+  towncar: {
+    label: "1988 Lincoln Town Car Signature",
+    color: "#5a2d82",
+    fields: [
+      ["VIN","1LNBM82FXJY779113"],
+      ["Mileage","31,511 actual original miles"],
+      ["Engine","5.0L HO V8 (Ford 302) · AOD 4-Speed Auto"],
+      ["Exterior","Oxford White · Black Landau Vinyl Roof"],
+      ["Interior","Windsor Velour Split-Bench (Navy Blue)"],
+      ["Wheels","Styled Wire Spoke · Whitewall Tires"],
+      ["Title","Clean North Dakota · Zero Liens"],
+      ["Location","Hazen / Beulah ND — by appointment"],
+      ["Asking","$10,000–$14,000 BaT target · Reserve $9,500"],
+    ],
+    tip: "Windsor Velour stays plush — does not crack like leather. Collector premium over leather versions. BaT comp: 34k-mi 1988 sold $8,201 (Jul 2025). With proper presentation $10K–$14K is realistic.",
+    condition: "Disclosed: driver door panel dry rot (~$200–300), window module repair (~$80–150), A/C needs R134a recharge (~$120–180), minor trim peeling. Total ~$500–700 factored into ask."
+  },
+  mkz: {
+    label: "2016 Lincoln MKZ Hybrid",
+    color: "#1a6b8a",
+    fields: [
+      ["VIN","3LN6L2LUXGR630397"],
+      ["Mileage","~100,000"],
+      ["Engine","2.0L Hybrid CVT · 41 MPG city / 39 MPG hwy"],
+      ["Exterior","Beige / Champagne"],
+      ["Interior","Premium Fabric / Miko Suede · Heated Front Seats"],
+      ["Tech","8\" SYNC Touchscreen · Backup Camera · Push-Button Start"],
+      ["Title","Rebuilt (Bonded Title in Process — NDCC §39-05-20.3)"],
+      ["Location","Lucky's Towing & Repair, 812 2nd St NW, Beulah ND"],
+      ["Pricing","$2,500–$6,500 depending on channel"],
+    ],
+    tip: "Bonded title converts to clean title after 3 years. Complete paper trail: bill of sale, Zelle payment records, seller letters, transport confirmation, active GEICO ND policy. NOT a 'missing title' — title was stolen by transporter.",
+    condition: "12V auxiliary battery needs deep-cycle recharge (~$100–$150). Hybrid drivetrain fully unaffected. Battery expected to continue 50k+ more miles. All other systems functional."
+  },
+  truck: {
+    label: "2006 Ford F-350 King Ranch Crew Cab 4x4",
+    color: "#1b2b4b",
+    fields: [
+      ["VIN","1FTWW31Y86EA12357"],
+      ["Mileage","47,000 actual"],
+      ["Engine","6.8L V10 Gas (no diesel, no DEF)"],
+      ["Exterior","Clean, GA-stored, no rust"],
+      ["Interior","Castaño Leather (untreated saddle) · pristine"],
+      ["Hitch","Factory 5th wheel kingpin hitch installed"],
+      ["Title","Clean GA Title · Zero Liens"],
+      ["Location","Douglasville GA · On-site: Sherrie & Doug Appleby"],
+      ["Target","$28,000–$36,000 BaT range · Reserve $22,000"],
+    ],
+    tip: "BaT comp: 26k-mi 2000 F-250 V10 gas sold $31,250 Jan 2026. GA storage = rust-free premium. Castaño leather is untreated saddle leather — collector-preferred, does not dry-crack.",
+    condition: "No known mechanical issues. V10 gas means no diesel headaches (no DEF, no EGR, no injector risk). Inspection available on-site in Douglasville GA by Sherrie/Doug Appleby."
+  },
+  camper: {
+    label: "2017 Jayco Eagle HT 26.5BHS",
+    color: "#c96a00",
+    fields: [
+      ["VIN","1UJCJ0BPXH1P20237"],
+      ["Mileage","~2,400 actual"],
+      ["Type","Fifth Wheel · Bunkhouse · Double-over-double bunks"],
+      ["GVWR","9,950 lbs · Half-ton towable"],
+      ["4-Season","Climate Shield rated to 0°F · Enclosed heated underbelly"],
+      ["Systems","All operational: furnace, A/C, water heater, stove, fridge, awning"],
+      ["Title","Clean GA Title · Zero Liens"],
+      ["Location","Douglasville GA · On-site: Sherrie & Doug Appleby"],
+      ["Asking","$30,000 · Floor $22,000+"],
+    ],
+    tip: "No competing 26.5BHS in ND or within 150 miles. Nearest comp (rear living, no bunks) is $29,995 in Detroit Lakes MN (282 mi away). Climate Shield is a requirement in ND, not a nice-to-have.",
+    condition: "4 disclosed items: tires (2017 DOT, full tread — age replacement advised ~$600), underbelly localized insulation damage (~$293 materials), Lippert rear auto-level jacks disengaged (manual override works), one cabinet hinge (~$50). Total ~$1,150–$1,600 — factored into ask."
+  },
+  both: {
+    label: "F-350 King Ranch + Jayco Eagle HT Package",
+    color: "#2e7d32",
+    fields: [
+      ["Package","Turnkey 5th wheel tow rig — truck + camper"],
+      ["Truck","2006 F-350 King Ranch · 47k mi · V10 gas · factory kingpin hitch"],
+      ["Camper","2017 Jayco Eagle HT 26.5BHS · ~2,400 mi · Climate Shield"],
+      ["Titles","Both clean GA · Zero Liens"],
+      ["Location","Both in Douglasville GA · Sherrie & Doug on-site"],
+      ["Package Target","$55,000–$65,000 combined (sold separately preferred)"],
+    ],
+    tip: "The V10 truck is factory-matched for the Jayco — kingpin hitch, 18,000 lb GCWR, day-one tow-ready. One owner, two assets, one transaction. Buyer can take the complete rig or either piece separately.",
+    condition: "See individual vehicle cards for condition details on each unit."
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+const STORAGE_KEY = "engagement-status-v2";
+let STATE = {};
+let openCard = null;
+let currentRegion = null;
+let currentCat = null;
+
+function defaultStatus(){
+  return {assigned:"Unassigned", stage:"Not Started", followupType:"— none yet —",
+    contactPhone:"Unassigned", contactSms:"Unassigned", contactEmail:"Unassigned",
+    contactVoicemail:"Unassigned", notes:""};
+}
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, true);
+    if(res && res.value){ STATE = JSON.parse(res.value); }
+  }catch(e){ STATE = {}; }
+  ENGAGEMENTS.forEach(en=>{ if(!STATE[en.id]) STATE[en.id] = defaultStatus(); });
+}
+
+let saveTimer = null;
+function saveState(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(STATE), true);
+      flashSaved();
+    }catch(e){ console.error("save failed", e); }
+  }, 250);
+}
+
+function flashSaved(){
+  const b = document.getElementById("saveBadge");
+  b.classList.add("show");
+  setTimeout(()=>b.classList.remove("show"), 1400);
+}
+
+// ═══════════════════════════════════════════════════════════
+// REGION / CAT GATES
+// ═══════════════════════════════════════════════════════════
+const REGION_INTRO = {
+  nd: `North Dakota &amp; surrounding region. <strong>Town Car</strong> is in Hazen/Beulah ND — Cynthia Ennis is the authorized on-site rep.
+       <strong>MKZ</strong> is at Lucky's Towing &amp; Repair, Beulah ND — bonded title in process. ND auction houses engaged: Resource Auction, Ulmer (both: photos taken, photographer contract signed).
+       Steffes and Neumiller: phone calls initiated by Kenyon, not yet at photos stage.
+       No wholesale — floor is $1,000 for the MKZ through instant cash channels only, target is rebuilt-lot or private sale at $4,500+.`,
+  ga: `Georgia &amp; surrounding region. Both the <strong>F-350 King Ranch</strong> and <strong>Jayco Eagle HT</strong> are stored in Douglasville GA.
+       On-site contacts: <strong>Sherrie &amp; Doug Appleby</strong> — available for photos, showings, and pre-purchase inspection.
+       Priority: Tier 1 consignment (they dispatch) before Tier 2 (appraisal if you bring it).
+       <strong>Never accept Camping World / Blue Compass</strong> for the Jayco — their wholesale floor ($10K–$13K) is off the table entirely.`
+};
+
+const ND_CATS = [
+  {key:"all",label:"All ND"},
+  {key:"towncar",label:"🚗 Town Car"},
+  {key:"mkz",label:"🚙 MKZ Hybrid"},
+  {key:"consignment",label:"Consignment","type":true},
+  {key:"auction",label:"Auction","type":true},
+];
+
+const GA_CATS = [
+  {key:"all",label:"All GA"},
+  {key:"truck",label:"🛻 F-350 Truck"},
+  {key:"camper",label:"🏕️ Jayco Camper"},
+  {key:"both",label:"🛻🏕️ Package"},
+  {key:"consignment",label:"Consignment","type":true},
+  {key:"auction",label:"Auction","type":true},
+];
+
+function selectRegion(r){
+  currentRegion = r;
+  currentCat = null;
+  document.getElementById("contentArea").classList.remove("visible");
+
+  // Reset region buttons
+  document.querySelectorAll(".region-btn").forEach(b=>b.classList.remove("active"));
+
+  if(!r){
+    document.getElementById("regionGate").style.display = "";
+    document.getElementById("catGate").classList.remove("visible");
+    updateSidebar([]);
+    return;
+  }
+
+  document.getElementById("regionGate").style.display = "none";
+  document.querySelector(`.region-btn.${r}`).classList.add("active");
+
+  // Build cat gate
+  const cats = r === "nd" ? ND_CATS : GA_CATS;
+  document.getElementById("catGateTitle").textContent = r === "nd" ? "ND Region — Select Vehicle or Category" : "GA Region — Select Vehicle or Category";
+  const btns = document.getElementById("catBtns");
+  btns.innerHTML = cats.map(c=>`<button class="cat-btn" onclick="selectCat('${c.key}')">${c.label}</button>`).join("");
+  document.getElementById("catGate").classList.add("visible");
+}
+
+function selectCat(cat){
+  currentCat = cat;
+  document.querySelectorAll(".cat-btn").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+  document.getElementById("introText").innerHTML = REGION_INTRO[currentRegion];
+  document.getElementById("contentArea").classList.add("visible");
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+function vehicleLabel(v){
+  const m = {truck:"Truck",camper:"Camper",both:"Truck+Camper",towncar:"Town Car",mkz:"MKZ Hybrid"};
+  return m[v] || v;
+}
+function vehicleTagClass(v){
+  const m = {truck:"tag-truck",camper:"tag-camper",both:"tag-both",towncar:"tag-towncar",mkz:"tag-mkz"};
+  return m[v] || "tag-both";
+}
+function tierTagClass(t){
+  if(t==="Tier 1") return "tag-tier1"; if(t==="Tier 2") return "tag-tier2";
+  if(t==="Tier 3") return "tag-tier3"; return "tag-both";
+}
+function channelTagClass(c){
+  const m = {consignment:"tag-consignment",auction:"tag-auction",direct:"tag-direct",both:"tag-both"};
+  return m[c] || "tag-both";
+}
+function cardHighlightClass(c){
+  const m = {consignment:"highlight-consignment",auction:"highlight-auction",direct:"highlight-direct",both:"highlight-both",self:""};
+  return m[c] || "";
+}
+
+function selectHTML(id, options, current, onchangeAttr){
+  return `<select id="${id}" ${onchangeAttr}>` +
+    options.map(o=>`<option value="${o}" ${o===current?"selected":""}>${o}</option>`).join("") +
+    `</select>`;
+}
+
+function buildCard(en){
+  const st = STATE[en.id];
+  const tpHtml = en.talkingPoints.map(t=>`<li>${t}</li>`).join("");
+  const hasPreNotes = en.preNotes ? `<div class="con-pre">📌 <strong>Pre-filled context:</strong> ${en.preNotes}</div>` : "";
+
+  return `
+  <div class="card ${cardHighlightClass(en.channelType)}" id="card-${en.id}" data-vehicle="${en.vehicle}" data-assigned="${st.assigned}">
+    <div class="card-head" onclick="toggleCard('${en.id}')">
+      <div>
+        <div class="card-title">${en.name}</div>
+        <div class="card-meta">${en.type} · ${en.address}</div>
+      </div>
+      <div class="card-right">
+        <span class="pill ${vehicleTagClass(en.vehicle)}">${vehicleLabel(en.vehicle)}</span>
+        <span class="pill ${tierTagClass(en.tier)}">${en.tier}</span>
+        <span class="pill ${channelTagClass(en.channelType)}">${en.channelType}</span>
+        <span class="statuspill ${STAGE_CLASS[st.stage]}" id="pill-${en.id}">${st.stage}</span>
+        <span class="chev">&#9656;</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="kv">
+        <div class="k">Contact</div><div class="v">${en.contact}</div>
+        <div class="k">Address</div><div class="v">${en.address}</div>
+        <div class="k">Type</div><div class="v">${en.type}</div>
+      </div>
+
+      ${hasPreNotes}
+
+      <h3 class="sec">Talking Points</h3>
+      <ul class="tp">${tpHtml}</ul>
+
+      <h3 class="sec">SMS — Copy &amp; Paste</h3>
+      <div class="smsbox">
+        <div class="lbl" style="background:${en.smsColor}">Text to ${en.name}</div>
+        <div class="msg" id="smsmsg-${en.id}">${en.sms}</div>
+        <div class="att">
+          <span>📎 ${en.attach}</span>
+          <button class="copybtn" onclick="copySms('${en.id}')">Copy Message</button>
+        </div>
+      </div>
+
+      <h3 class="sec">Status &amp; Engagement Tracking</h3>
+      <div class="statusgrid">
+        <div class="field">
+          <label>Assigned To</label>
+          ${selectHTML(`assigned-${en.id}`, PEOPLE, st.assigned, `onchange="updateField('${en.id}','assigned',this.value)"`)}
+        </div>
+        <div class="field">
+          <label>Pipeline Stage</label>
+          ${selectHTML(`stage-${en.id}`, STAGES, st.stage, `onchange="updateField('${en.id}','stage',this.value)"`)}
+        </div>
+        <div class="field">
+          <label>Contacted — Phone (who)</label>
+          ${selectHTML(`contactPhone-${en.id}`, PEOPLE, st.contactPhone, `onchange="updateField('${en.id}','contactPhone',this.value)"`)}
+        </div>
+        <div class="field">
+          <label>Contacted — SMS (who)</label>
+          ${selectHTML(`contactSms-${en.id}`, PEOPLE, st.contactSms, `onchange="updateField('${en.id}','contactSms',this.value)"`)}
+        </div>
+        <div class="field">
+          <label>Contacted — Email (who)</label>
+          ${selectHTML(`contactEmail-${en.id}`, PEOPLE, st.contactEmail, `onchange="updateField('${en.id}','contactEmail',this.value)"`)}
+        </div>
+        <div class="field">
+          <label>Contacted — Voicemail (who)</label>
+          ${selectHTML(`contactVoicemail-${en.id}`, PEOPLE, st.contactVoicemail, `onchange="updateField('${en.id}','contactVoicemail',this.value)"`)}
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Follow-up / Appointment Type</label>
+          ${selectHTML(`followupType-${en.id}`, FOLLOWUP_TYPES, st.followupType, `onchange="updateField('${en.id}','followupType',this.value)"`)}
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Notes</label>
+          <textarea class="noteph" placeholder="Log dates, names spoken with, numbers discussed, and next action here..."
+            onchange="updateField('${en.id}','notes',this.value)">${st.notes || ""}</textarea>
+          <div class="hint">Hint: date each entry, note who you spoke with, any offer number or reserve discussed, and what the next step is.</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function groupHeading(label, cls){
+  return `<div class="grouphead ${cls||""}">${label}</div>`;
+}
+
+function getVisibleEngagements(){
+  if(!currentRegion || !currentCat) return [];
+  return ENGAGEMENTS.filter(en => {
+    if(en.region !== currentRegion) return false;
+    if(currentCat === "all") return true;
+    // vehicle filter
+    if(["truck","camper","both","towncar","mkz"].includes(currentCat)) return en.vehicle === currentCat;
+    // channel type filter
+    if(["consignment","auction","direct"].includes(currentCat)) return en.channelType === currentCat;
+    return true;
+  });
+}
+
+function renderAll(){
+  if(!currentRegion || !currentCat){
+    document.getElementById("cardsContainer").innerHTML = "";
+    document.getElementById("summaryBody").innerHTML = "";
+    return;
+  }
+
+  const aFilter = document.getElementById("filterAssigned").value;
+  const visible = getVisibleEngagements();
+  const filteredByPerson = visible.filter(en => aFilter === "all" || STATE[en.id].assigned === aFilter);
+
+  // Group by vehicle
+  const groups = currentRegion === "nd"
+    ? [{key:"towncar",label:"🚗 1988 Town Car Signature — ND Region",cls:"nd"},{key:"mkz",label:"🚙 2016 MKZ Hybrid — ND Region",cls:"nd"}]
+    : [{key:"truck",label:"🛻 F-350 King Ranch — GA Region",cls:"ga"},{key:"both",label:"🛻🏕️ Truck + Camper Package — GA Region",cls:"ga"},{key:"camper",label:"🏕️ Jayco Eagle HT — GA Region",cls:"ga"}];
+
+  let html = "";
+  groups.forEach(g=>{
+    const items = filteredByPerson.filter(en => en.vehicle === g.key);
+    if(items.length === 0) return;
+    html += groupHeading(g.label, g.cls);
+    // Sort: Tier 1, Tier 2, Tier 3, Self-Submit
+    const tierOrder = {"Tier 1":0,"Tier 2":1,"Tier 3":2,"Self-Submit":3};
+    items.sort((a,b) => (tierOrder[a.tier]||9) - (tierOrder[b.tier]||9));
+    items.forEach(en => html += buildCard(en));
+  });
+
+  document.getElementById("cardsContainer").innerHTML = html || "<p style='color:#888;font-size:13px;'>No engagements match current filters.</p>";
+  if(openCard){
+    const el = document.getElementById("card-"+openCard);
+    if(el) el.classList.add("open");
+  }
+
+  // Update sidebar vehicles for current context
+  const vehiclesShown = [...new Set(filteredByPerson.map(e=>e.vehicle))];
+  updateSidebar(vehiclesShown);
+  renderSummary(filteredByPerson);
+}
+
+function renderSummary(items){
+  if(!items) items = getVisibleEngagements();
+  const rows = items.map(en=>{
+    const st = STATE[en.id];
+    const phone = en.contact.match(/\(?\d{3}\)?[\s\-\.]?\d{3}[\s\-\.]?\d{4}/);
+    return `<tr onclick="jumpTo('${en.id}')">
+      <td>${en.name}</td>
+      <td><span class="pill ${vehicleTagClass(en.vehicle)}">${vehicleLabel(en.vehicle)}</span></td>
+      <td><span class="pill ${channelTagClass(en.channelType)}">${en.channelType}</span></td>
+      <td><span class="pill ${tierTagClass(en.tier)}">${en.tier}</span></td>
+      <td>${phone ? phone[0] : "—"}</td>
+      <td>${st.assigned}</td>
+      <td><span class="statuspill ${STAGE_CLASS[st.stage]}">${st.stage}</span></td>
+    </tr>`;
+  }).join("");
+  document.getElementById("summaryBody").innerHTML = rows;
+}
+
+function updateSidebar(vehicleKeys){
+  if(!vehicleKeys || vehicleKeys.length === 0){
+    document.getElementById("vehicleCards").innerHTML = "<p style='font-size:12px;color:#888;'>Select a region to see vehicle details.</p>";
+    document.getElementById("sidebarContext").textContent = "Select a region and engagement to see details.";
+    return;
+  }
+
+  const region = currentRegion === "nd" ? "ND Region" : "GA Region";
+  document.getElementById("sidebarContext").textContent = `Showing: ${region}`;
+
+  // Show all relevant vehicle cards
+  const allVehicles = currentCat === "all"
+    ? (currentRegion === "nd" ? ["towncar","mkz"] : ["truck","both","camper"])
+    : vehicleKeys.length > 0 ? vehicleKeys : (currentRegion === "nd" ? ["towncar","mkz"] : ["truck","camper"]);
+
+  const uniqueVehicles = [...new Set(allVehicles)];
+
+  let html = "";
+  uniqueVehicles.forEach(v => {
+    const vc = VEHICLE_CARDS[v];
+    if(!vc) return;
+    html += `
+      <div class="vh-card">
+        <div class="vh-head" style="background:${vc.color};">${vc.label}</div>
+        <div class="vh-body">
+          ${vc.fields.map(f=>`<div class="row"><span class="lbl">${f[0]}</span><span class="val">${f[1]}</span></div>`).join("")}
+          <div class="vh-tip">💡 ${vc.tip}</div>
+          ${vc.condition ? `<div style="font-size:11px;color:#666;margin-top:6px;border-top:1px solid #eee;padding-top:6px;">⚠️ Condition: ${vc.condition}</div>` : ""}
+        </div>
+      </div>`;
+  });
+
+  document.getElementById("vehicleCards").innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SIDEBAR TABS
+// ═══════════════════════════════════════════════════════════
+window.sbTab = function(name){
+  document.querySelectorAll(".sb-tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".sb-panel").forEach(p=>p.classList.remove("active"));
+  event.target.classList.add("active");
+  document.getElementById("panel-"+name).classList.add("active");
+};
+
+// ═══════════════════════════════════════════════════════════
+// CARD INTERACTIONS
+// ═══════════════════════════════════════════════════════════
+function jumpTo(id){
+  openCard = id;
+  renderAll();
+  setTimeout(()=>{
+    const el = document.getElementById("card-"+id);
+    if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+  }, 60);
+}
+
+window.toggleCard = function(id){
+  const el = document.getElementById("card-"+id);
+  const isOpen = el.classList.contains("open");
+  document.querySelectorAll(".card.open").forEach(c=>c.classList.remove("open"));
+  if(!isOpen){
+    el.classList.add("open");
+    openCard = id;
+    // Update sidebar to highlight relevant vehicles for this card
+    const en = ENGAGEMENTS.find(e=>e.id===id);
+    if(en) updateSidebar([en.vehicle]);
+  } else {
+    openCard = null;
+  }
+};
+
+window.updateField = function(id, field, value){
+  STATE[id][field] = value;
+  saveState();
+  if(field === "stage"){
+    const pill = document.getElementById("pill-"+id);
+    if(pill){ pill.className = "statuspill " + STAGE_CLASS[value]; pill.textContent = value; }
+  }
+  renderSummary(getVisibleEngagements());
+};
+
+window.copySms = function(id){
+  const text = document.getElementById("smsmsg-"+id).textContent;
+  navigator.clipboard?.writeText(text).then(()=>flashSaved()).catch(()=>{});
+};
+
+document.getElementById("expandAllBtn").onclick = ()=>{
+  openCard = "__ALL__";
+  document.querySelectorAll(".card").forEach(c=>c.classList.add("open"));
+};
+document.getElementById("collapseAllBtn").onclick = ()=>{
+  openCard = null;
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("open"));
+};
+document.getElementById("filterAssigned").onchange = renderAll;
+
+// ═══════════════════════════════════════════════════════════
+// CONTACTS PANEL — fetched live from /tracker-storage/vendor-contacts,
+// gated by X-Tracker-Key + this user's own tracker password. Replaces
+// what used to be hardcoded names/phones/emails in the panel-contacts
+// sidebar HTML — nothing here is ever committed to the repo.
+// ═══════════════════════════════════════════════════════════
+function renderContacts(data){
+  const el = document.getElementById("contactsContent");
+  if(!data || typeof data !== "object" || Array.isArray(data)){
+    el.innerHTML = '<p style="color:#8b1a1a;">No contact data returned.</p>';
+    return;
+  }
+  const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const titleCase = s => s.replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
+  let html = '<div style="line-height:1.7;">';
+  Object.entries(data).forEach(([label, val]) => {
+    if(val && typeof val === "object" && !Array.isArray(val)){
+      const isPersonCard = "phone" in val || "email" in val || "note" in val;
+      if(isPersonCard){
+        html += `<strong>${esc(label)}</strong><br>`;
+        if(val.phone) html += `📞 ${esc(val.phone)}<br>`;
+        if(val.email) html += `📧 ${esc(val.email)}<br>`;
+        if(val.note) html += `${esc(val.note)}<br>`;
+        html += "<br>";
+      } else {
+        html += '<hr style="border:none;border-top:1px solid #eee;margin:10px 0;">';
+        html += `<strong>${esc(titleCase(label))}</strong><br>`;
+        Object.entries(val).forEach(([k, v]) => { html += `${esc(k)}: ${esc(v)}<br>`; });
+        html += "<br>";
+      }
+    } else {
+      html += `<strong>${esc(label)}:</strong> ${esc(val)}<br><br>`;
+    }
+  });
+  html += "</div>";
+  el.innerHTML = html;
+}
+
+async function loadContacts(password){
+  const el = document.getElementById("contactsContent");
+  el.textContent = "Loading contacts…";
+  if(!password){
+    el.innerHTML = '<p style="color:#8b1a1a;">No password available to load contacts — please log in again.</p>';
+    return;
+  }
+  try{
+    const res = await fetch(`${TRACKER_API_BASE}/vendor-contacts?password=${encodeURIComponent(password)}`, {
+      headers: {"X-Tracker-Key": TRACKER_KEY}
+    });
+    if(res.status === 404){
+      el.innerHTML = '<p style="color:#888;">Vendor contacts endpoint isn\'t deployed yet — check /tracker-storage/vendor-contacts on commplex-api.</p>';
+      return;
+    }
+    if(!res.ok){
+      throw new Error(`${res.status}: ${await res.text()}`);
+    }
+    const data = await res.json();
+    renderContacts(data);
+  }catch(e){
+    console.error("loadContacts error", e);
+    el.innerHTML = `<p style="color:#8b1a1a;">Could not load vendor contacts (${esc_(String(e.message || e))}). The endpoint may not be deployed yet.</p>`;
+  }
+}
+function esc_(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// ═══════════════════════════════════════════════════════════
+// AUTH GATE
+// ═══════════════════════════════════════════════════════════
+// Kept only in memory for the session (not sessionStorage, not persisted) so
+// boot()'s one-time vendor-contacts fetch can send it. Never written back
+// into Firestore or any other storage.
+let currentTrackerPassword = null;
+// Held only between a temp-password /login response and the matching
+// /complete-profile submit — complete-profile re-verifies current_password
+// server-side rather than trusting that login already succeeded.
+let pendingLoginName = null;
+let pendingLoginPassword = null;
+
+function showAuthStep(id){
+  document.querySelectorAll(".auth-step").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function hasTrackerRole(roles){
+  return Array.isArray(roles) && roles.includes("tracker");
+}
+
+document.getElementById("authLoginBtn").onclick = async ()=>{
+  const name = document.getElementById("authLoginName").value.trim();
+  const pw = document.getElementById("authLoginPassword").value;
+  const err = document.getElementById("authLoginErr");
+  if(!name || !pw){ err.textContent = "Enter your name and password."; return; }
+  err.textContent = "";
+  try{
+    const res = await fetch(`${TRACKER_API_BASE}/login`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "X-Tracker-Key": TRACKER_KEY},
+      body: JSON.stringify({name, password: pw})
+    });
+    if(!res.ok){
+      err.textContent = res.status === 401 ? "Incorrect name or password." : `Login failed (${res.status}).`;
+      return;
+    }
+    const data = await res.json();
+    if(data.must_change_password){
+      pendingLoginName = name;
+      pendingLoginPassword = pw;
+      document.getElementById("completeNewPassword").value = "";
+      document.getElementById("completeNewPassword2").value = "";
+      document.getElementById("completeEmail").value = data.email || "";
+      document.getElementById("completePhone").value = data.phone || "";
+      document.getElementById("authCompleteErr").textContent = "";
+      showAuthStep("authStepComplete");
+      return;
+    }
+    if(!hasTrackerRole(data.roles)){
+      err.textContent = "This account doesn't have tracker access.";
+      return;
+    }
+    currentTrackerPassword = pw;
+    document.getElementById("authGate").classList.add("hidden");
+    boot();
+  }catch(e){
+    console.error("login error", e);
+    err.textContent = "Could not reach the login server. Try again.";
+  }
+};
+
+document.getElementById("authShowLoginFromComplete").onclick = (e)=>{
+  e.preventDefault();
+  pendingLoginName = null;
+  pendingLoginPassword = null;
+  document.getElementById("authLoginErr").textContent = "";
+  showAuthStep("authStepLogin");
+};
+
+document.getElementById("authCompleteBtn").onclick = async ()=>{
+  const newPw = document.getElementById("completeNewPassword").value;
+  const newPw2 = document.getElementById("completeNewPassword2").value;
+  const email = document.getElementById("completeEmail").value.trim();
+  const phone = document.getElementById("completePhone").value.trim();
+  const err = document.getElementById("authCompleteErr");
+  if(!newPw || newPw.length < 4){ err.textContent = "New password must be at least 4 characters."; return; }
+  if(newPw !== newPw2){ err.textContent = "Passwords don't match."; return; }
+  if(!email || !phone){ err.textContent = "Email and phone are both required."; return; }
+  err.textContent = "";
+  try{
+    const res = await fetch(`${TRACKER_API_BASE}/complete-profile`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "X-Tracker-Key": TRACKER_KEY},
+      body: JSON.stringify({
+        name: pendingLoginName,
+        current_password: pendingLoginPassword,
+        new_password: newPw,
+        email, phone
+      })
+    });
+    if(!res.ok){
+      const detail = await res.json().catch(()=>null);
+      err.textContent = (detail && detail.detail) || `Could not complete profile (${res.status}).`;
+      return;
+    }
+    const data = await res.json();
+    if(!hasTrackerRole(data.roles)){
+      err.textContent = "This account doesn't have tracker access.";
+      return;
+    }
+    currentTrackerPassword = newPw;
+    pendingLoginName = null;
+    pendingLoginPassword = null;
+    document.getElementById("authGate").classList.add("hidden");
+    boot();
+  }catch(e){
+    console.error("complete-profile error", e);
+    err.textContent = "Could not reach the server. Try again.";
+  }
+};
+
+document.getElementById("authShowRequest").onclick = (e)=>{
+  e.preventDefault();
+  document.getElementById("authRequestForm").style.display = "";
+  document.getElementById("authRequestSuccess").style.display = "none";
+  document.getElementById("authRequestErr").textContent = "";
+  showAuthStep("authStepRequest");
+};
+
+document.getElementById("authShowLoginFromRequest").onclick = (e)=>{
+  e.preventDefault();
+  document.getElementById("authLoginErr").textContent = "";
+  showAuthStep("authStepLogin");
+};
+
+document.getElementById("authRequestBtn").onclick = async ()=>{
+  const name = document.getElementById("reqName").value.trim();
+  const email = document.getElementById("reqEmail").value.trim();
+  const phone = document.getElementById("reqPhone").value.trim();
+  const roles_requested = [];
+  if(document.getElementById("reqRoleTracker").checked) roles_requested.push("tracker");
+  if(document.getElementById("reqRoleModerator").checked) roles_requested.push("moderator");
+  const err = document.getElementById("authRequestErr");
+  if(!name || !email || !phone){ err.textContent = "Name, email, and phone are all required."; return; }
+  if(!roles_requested.length){ err.textContent = "Select at least one access type."; return; }
+  err.textContent = "";
+  try{
+    const res = await fetch(`${TRACKER_API_BASE}/access-requests`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "X-Tracker-Key": TRACKER_KEY},
+      body: JSON.stringify({name, email, phone, roles_requested})
+    });
+    if(!res.ok){
+      const detail = await res.json().catch(()=>null);
+      err.textContent = (detail && detail.detail) || `Request failed (${res.status}).`;
+      return;
+    }
+    document.getElementById("authRequestForm").style.display = "none";
+    document.getElementById("authRequestSuccess").style.display = "";
+  }catch(e){
+    console.error("access request error", e);
+    err.textContent = "Could not reach the server. Try again.";
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+async function boot(){
+  await loadEngagements(currentTrackerPassword);
+  await loadState();
+  renderAll();
+  loadContacts(currentTrackerPassword);
+}
+(async function initAuth(){
+  await bootstrapTrackerKey();
+})();
+</script>
+</body>
+</html>
