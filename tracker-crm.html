@@ -588,16 +588,20 @@ const FOLLOWUP_TYPES = [
 // ═══════════════════════════════════════════════════════════
 let ENGAGEMENTS = [];
 
-async function loadEngagements(password){
+async function loadEngagements(name, password){
   const loadingEl = document.getElementById("regionGateLoading");
   const btnsEl = document.getElementById("regionBtns");
-  if(!password){
-    loadingEl.innerHTML = '<p style="color:#8b1a1a;">No password available to load engagement data — please log in again.</p>';
+  if(!name || !password){
+    loadingEl.innerHTML = '<p style="color:#8b1a1a;">No credentials available to load engagement data — please log in again.</p>';
     return;
   }
   try{
-    const res = await fetch(`${TRACKER_API_BASE}/engagements?password=${encodeURIComponent(password)}`, {
-      headers: {"X-Tracker-Key": TRACKER_KEY}
+    const res = await fetch(`${TRACKER_API_BASE}/engagements`, {
+      headers: {
+        "X-Tracker-Key": TRACKER_KEY,
+        "X-User-Name": name,
+        "X-User-Password": password
+      }
     });
     if(res.status === 404){
       loadingEl.innerHTML = '<p style="color:#888;">Engagements endpoint isn\'t deployed yet — check /tracker-storage/engagements on commplex-api.</p>';
@@ -863,9 +867,11 @@ function buildCard(en){
     </div>
     <div class="card-body">
       <div class="kv">
+        ${en.description ? `<div class="k">Description</div><div class="v">${en.description}</div>` : ''}
         <div class="k">Contact</div><div class="v">${en.contact}</div>
         <div class="k">Address</div><div class="v">${en.address}</div>
         <div class="k">Type</div><div class="v">${en.type}</div>
+        ${en.asset_ids ? `<div class="k">Asset IDs</div><div class="v">${Array.isArray(en.asset_ids) ? en.asset_ids.join(', ') : en.asset_ids}</div>` : ''}
       </div>
 
       ${hasPreNotes}
@@ -1112,12 +1118,16 @@ function renderContacts(data){
   let html = '<div style="line-height:1.7;">';
   Object.entries(data).forEach(([label, val]) => {
     if(val && typeof val === "object" && !Array.isArray(val)){
-      const isPersonCard = "phone" in val || "email" in val || "note" in val;
+      const isPersonCard = "phone" in val || "email" in val || "note" in val || "location" in val || "poc" in val || "type" in val || "status" in val;
       if(isPersonCard){
         html += `<strong>${esc(label)}</strong><br>`;
+        if(val.type) html += `Type: ${esc(val.type)}<br>`;
+        if(val.status) html += `Status: ${esc(val.status)}<br>`;
+        if(val.location) html += `📍 ${esc(val.location)}<br>`;
+        if(val.poc) html += `👤 ${esc(val.poc)}<br>`;
         if(val.phone) html += `📞 ${esc(val.phone)}<br>`;
         if(val.email) html += `📧 ${esc(val.email)}<br>`;
-        if(val.note) html += `${esc(val.note)}<br>`;
+        if(val.note) html += `📝 ${esc(val.note)}<br>`;
         html += "<br>";
       } else {
         html += '<hr style="border:none;border-top:1px solid #eee;margin:10px 0;">';
@@ -1133,16 +1143,20 @@ function renderContacts(data){
   el.innerHTML = html;
 }
 
-async function loadContacts(password){
+async function loadContacts(name, password){
   const el = document.getElementById("contactsContent");
   el.textContent = "Loading contacts…";
-  if(!password){
-    el.innerHTML = '<p style="color:#8b1a1a;">No password available to load contacts — please log in again.</p>';
+  if(!name || !password){
+    el.innerHTML = '<p style="color:#8b1a1a;">No credentials available to load contacts — please log in again.</p>';
     return;
   }
   try{
-    const res = await fetch(`${TRACKER_API_BASE}/vendor-contacts?password=${encodeURIComponent(password)}`, {
-      headers: {"X-Tracker-Key": TRACKER_KEY}
+    const res = await fetch(`${TRACKER_API_BASE}/vendor-contacts`, {
+      headers: {
+        "X-Tracker-Key": TRACKER_KEY,
+        "X-User-Name": name,
+        "X-User-Password": password
+      }
     });
     if(res.status === 404){
       el.innerHTML = '<p style="color:#888;">Vendor contacts endpoint isn\'t deployed yet — check /tracker-storage/vendor-contacts on commplex-api.</p>';
@@ -1166,6 +1180,7 @@ function esc_(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>
 // Kept only in memory for the session (not sessionStorage, not persisted) so
 // boot()'s one-time vendor-contacts fetch can send it. Never written back
 // into Firestore or any other storage.
+let currentTrackerName = null;
 let currentTrackerPassword = null;
 // Held only between a temp-password /login response and the matching
 // /complete-profile submit — complete-profile re-verifies current_password
@@ -1214,6 +1229,7 @@ document.getElementById("authLoginBtn").onclick = async ()=>{
       err.textContent = "This account doesn't have tracker access.";
       return;
     }
+    currentTrackerName = name;
     currentTrackerPassword = pw;
     document.getElementById("authGate").classList.add("hidden");
     boot();
@@ -1262,6 +1278,7 @@ document.getElementById("authCompleteBtn").onclick = async ()=>{
       err.textContent = "This account doesn't have tracker access.";
       return;
     }
+    currentTrackerName = pendingLoginName;
     currentTrackerPassword = newPw;
     pendingLoginName = null;
     pendingLoginPassword = null;
@@ -1321,10 +1338,10 @@ document.getElementById("authRequestBtn").onclick = async ()=>{
 // INIT
 // ═══════════════════════════════════════════════════════════
 async function boot(){
-  await loadEngagements(currentTrackerPassword);
+  await loadEngagements(currentTrackerName, currentTrackerPassword);
   await loadState();
   renderAll();
-  loadContacts(currentTrackerPassword);
+  loadContacts(currentTrackerName, currentTrackerPassword);
 }
 (async function initAuth(){
   await bootstrapTrackerKey();
