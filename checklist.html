@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pre-Launch Checklist — AutoBäad</title>
+<style>
+:root{
+  --navy:#1b2b4b; --navy2:#243a63; --gray:#4a4a4a; --lgray:#d8d8d8; --llgray:#f2f2f2; --bg:#f7f6f3;
+  --white:#fff; --green:#1a5c38; --red:#8b1a1a; --gold:#b8860b;
+}
+*{box-sizing:border-box;}
+body{margin:0; font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:#222; padding:0 0 60px;}
+
+.topbar{
+  background:linear-gradient(135deg,var(--navy),var(--navy2)); color:#fff;
+  padding:18px 24px 14px; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,.3);
+}
+.topbar h1{margin:0 0 3px; font-size:20px;}
+.topbar .sub{font-size:12px; color:#cdd6e8;}
+
+#authGate{
+  position:fixed; inset:0; background:linear-gradient(135deg,#1b2b4b,#243a63);
+  display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px;
+}
+#authGate.hidden{display:none;}
+.auth-box{
+  background:#fff; border-radius:10px; padding:32px 28px; width:100%; max-width:360px;
+  box-shadow:0 10px 40px rgba(0,0,0,.4); text-align:center;
+}
+.auth-box h2{margin:0 0 6px; color:#1b2b4b; font-size:19px;}
+.auth-box p.sub{margin:0 0 20px; color:#666; font-size:12.5px; line-height:1.5;}
+.auth-box input{
+  width:100%; padding:10px 11px; border:1px solid #d8d8d8; border-radius:6px;
+  font-size:14px; margin-bottom:12px; font-family:inherit; box-sizing:border-box;
+}
+.auth-box button{
+  width:100%; padding:11px; background:#1b2b4b; color:#fff; border:none; border-radius:6px;
+  font-size:14px; font-weight:bold; cursor:pointer;
+}
+.auth-box button:hover{opacity:.9;}
+.auth-err{color:#8b1a1a; font-size:12.5px; margin:-4px 0 12px; min-height:16px;}
+.auth-note{font-size:12.5px; color:#8b1a1a; margin-top:14px; line-height:1.5;}
+.auth-note a{color:#1b2b4b;}
+
+.outer{max-width:900px; margin:0 auto; padding:20px 16px 40px; display:none;}
+.outer.visible{display:block;}
+
+.category-head{
+  font-size:14px; font-weight:bold; color:var(--navy); margin:22px 0 8px; padding-bottom:5px;
+  border-bottom:2px solid var(--navy); text-transform:uppercase; letter-spacing:.4px;
+}
+.category-head:first-child{margin-top:0;}
+
+.item{background:#fff; border:1px solid var(--lgray); border-radius:8px; padding:14px 16px; margin-bottom:10px;}
+.item-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
+.item-title{font-weight:bold; font-size:14px; color:#222;}
+.item-desc{font-size:12.5px; color:var(--gray); margin-top:4px; line-height:1.5;}
+.status-pill{
+  font-size:10.5px; font-weight:bold; padding:3px 9px; border-radius:10px; white-space:nowrap;
+  text-transform:uppercase; letter-spacing:.3px;
+}
+.status-untested{background:#eee; color:#555;}
+.status-claimed{background:#fdf6e3; color:var(--gold);}
+.status-pass{background:#ebf5ee; color:var(--green);}
+.status-fail{background:#fdf3f3; color:var(--red);}
+
+.item-meta{font-size:11.5px; color:#888; margin-top:8px;}
+.item-notes{font-size:12px; color:#444; margin-top:6px; background:#f7f6f3; padding:8px 10px; border-radius:5px;}
+
+.item-actions{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.item-actions button{
+  padding:6px 12px; border-radius:5px; font-size:12px; cursor:pointer; border:1px solid var(--navy);
+  background:#fff; color:var(--navy);
+}
+.item-actions button:hover{background:var(--navy); color:#fff;}
+.item-actions button.primary{background:var(--navy); color:#fff;}
+.item-actions button.primary:hover{opacity:.85;}
+.item-actions button.pass{border-color:var(--green); color:var(--green);}
+.item-actions button.pass:hover{background:var(--green); color:#fff;}
+.item-actions button.fail{border-color:var(--red); color:var(--red);}
+.item-actions button.fail:hover{background:var(--red); color:#fff;}
+.item-actions textarea{
+  width:100%; margin-top:8px; padding:6px 8px; font-size:12.5px; border:1px solid #d8d8d8;
+  border-radius:4px; font-family:inherit;
+}
+.item-status-msg{font-size:11.5px; margin-top:6px;}
+.item-status-msg.err{color:var(--red);}
+</style>
+</head>
+<body>
+
+<div id="authGate">
+  <div class="auth-box">
+    <h2>✅ Pre-Launch Checklist</h2>
+    <p class="sub">Tracker-role account required. Log in with your tracker-crm.html credentials.</p>
+    <input type="text" id="authLoginName" placeholder="Full name" autocomplete="username">
+    <input type="password" id="authLoginPassword" placeholder="Password" autocomplete="current-password">
+    <div class="auth-err" id="authLoginErr"></div>
+    <button id="authLoginBtn">Log In</button>
+    <div class="auth-note" id="authNote" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="topbar">
+  <h1>✅ Pre-Launch Checklist</h1>
+  <div class="sub">Claim an item so nobody duplicates work, test it, mark pass/fail with a note.</div>
+</div>
+
+<div class="outer" id="outer">
+  <div id="listContainer"></div>
+</div>
+
+<script src="assets/site-auth.js"></script>
+<script>
+const TRACKER_API_BASE = SiteAuth.getApiBase() + "/tracker-storage";
+let TRACKER_KEY = null;
+let currentUserName = null;
+let currentUserPassword = null;
+let ITEMS = [];
+
+async function bootstrapTrackerKey(){
+  try{
+    const res = await fetch(`${TRACKER_API_BASE}/client-key`);
+    if(!res.ok) throw new Error(`client-key fetch failed: ${res.status}`);
+    const data = await res.json();
+    TRACKER_KEY = data.key;
+  }catch(e){ console.error("bootstrapTrackerKey error", e); }
+}
+
+function hasRole(roles, role){
+  return Array.isArray(roles) && (roles.includes("owner") || roles.includes(role));
+}
+
+document.getElementById("authLoginBtn").onclick = async ()=>{
+  const name = document.getElementById("authLoginName").value.trim();
+  const pw = document.getElementById("authLoginPassword").value;
+  const err = document.getElementById("authLoginErr");
+  const note = document.getElementById("authNote");
+  err.textContent = "";
+  note.style.display = "none";
+  if(!name || !pw){ err.textContent = "Enter your name and password."; return; }
+  try{
+    const res = await fetch(`${TRACKER_API_BASE}/login`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "X-Tracker-Key": TRACKER_KEY},
+      body: JSON.stringify({name, password: pw})
+    });
+    if(!res.ok){
+      err.textContent = res.status === 401 ? "Incorrect name or password." : `Login failed (${res.status}).`;
+      return;
+    }
+    const data = await res.json();
+    if(data.must_change_password){
+      note.style.display = "block";
+      note.innerHTML = 'First login on this account — complete setup on <a href="tracker-crm.html">tracker-crm.html</a> first, then come back here.';
+      return;
+    }
+    if(!hasRole(data.roles, "tracker")){
+      err.textContent = "This page requires tracker access.";
+      return;
+    }
+    currentUserName = name;
+    currentUserPassword = pw;
+    document.getElementById("authGate").classList.add("hidden");
+    document.getElementById("outer").classList.add("visible");
+    await loadItems();
+  }catch(e){
+    console.error("login error", e);
+    err.textContent = "Could not reach the login server. Try again.";
+  }
+};
+
+function authHeaders(){
+  return {
+    "Content-Type": "application/json",
+    "X-Tracker-Key": TRACKER_KEY,
+    "X-User-Name": currentUserName,
+    "X-User-Password": currentUserPassword,
+  };
+}
+
+async function loadItems(){
+  // no-store: this is a shared, frequently-changing claim list — a cached
+  // response could show an item as "untested" after someone else already
+  // claimed it, defeating the entire point of claiming.
+  const res = await fetch(`${TRACKER_API_BASE}/checklist-items`, {headers: authHeaders(), cache: "no-store"});
+  if(!res.ok){
+    document.getElementById("listContainer").innerHTML = `<p style="color:#8b1a1a;">Could not load checklist (${res.status}).</p>`;
+    return;
+  }
+  ITEMS = await res.json();
+  renderItems();
+}
+
+function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function renderItems(){
+  const byCategory = {};
+  for(const item of ITEMS){
+    const cat = item.category || "general";
+    (byCategory[cat] = byCategory[cat] || []).push(item);
+  }
+  let html = "";
+  for(const cat of Object.keys(byCategory).sort()){
+    html += `<div class="category-head">${esc(cat)}</div>`;
+    for(const item of byCategory[cat]){
+      html += renderItem(item);
+    }
+  }
+  document.getElementById("listContainer").innerHTML = html || "<p>No checklist items yet.</p>";
+}
+
+function renderItem(item){
+  const mine = item.claimed_by === currentUserName;
+  let actions = "";
+  if(item.status === "untested"){
+    actions = `<button class="primary" onclick="claimItem('${item.id}')">Claim</button>`;
+  }else if(item.status === "claimed" && mine){
+    actions = `
+      <div style="width:100%;">
+        <textarea id="note-${item.id}" rows="2" placeholder="Notes (optional)"></textarea>
+        <div class="item-actions">
+          <button class="pass" onclick="completeItem('${item.id}','pass')">Mark Pass</button>
+          <button class="fail" onclick="completeItem('${item.id}','fail')">Mark Fail</button>
+          <button onclick="reopenItem('${item.id}')">Reopen</button>
+        </div>
+      </div>`;
+  }else if(item.status === "claimed" && !mine){
+    actions = `<span style="font-size:12px;color:#888;">Claimed by ${esc(item.claimed_by)}</span>`;
+  }else if(item.status === "pass" || item.status === "fail"){
+    actions = `<button onclick="reopenItem('${item.id}')">Reopen</button>`;
+  }
+
+  return `
+  <div class="item" id="item-${item.id}">
+    <div class="item-head">
+      <div>
+        <div class="item-title">${esc(item.title)}</div>
+        <div class="item-desc">${esc(item.description)}</div>
+      </div>
+      <span class="status-pill status-${item.status}">${esc(item.status)}</span>
+    </div>
+    ${item.claimed_by ? `<div class="item-meta">Claimed by ${esc(item.claimed_by)}</div>` : ""}
+    ${item.notes ? `<div class="item-notes">${esc(item.notes)}</div>` : ""}
+    <div class="item-actions">${actions}</div>
+    <div class="item-status-msg" id="status-${item.id}"></div>
+  </div>`;
+}
+
+async function claimItem(id){
+  const res = await fetch(`${TRACKER_API_BASE}/checklist-items/${id}/claim`, {method:"POST", headers: authHeaders()});
+  if(!res.ok){
+    const detail = await res.json().catch(()=>null);
+    const el = document.getElementById(`status-${id}`);
+    if(el){ el.textContent = (detail && detail.detail) || `Could not claim (${res.status}).`; el.className = "item-status-msg err"; }
+    return;
+  }
+  await loadItems();
+}
+
+async function completeItem(id, result){
+  const noteEl = document.getElementById(`note-${id}`);
+  const note = noteEl ? noteEl.value.trim() : "";
+  const res = await fetch(`${TRACKER_API_BASE}/checklist-items/${id}/complete`, {
+    method:"POST", headers: authHeaders(), body: JSON.stringify({result, note: note || null})
+  });
+  if(!res.ok){
+    const detail = await res.json().catch(()=>null);
+    const el = document.getElementById(`status-${id}`);
+    if(el){ el.textContent = (detail && detail.detail) || `Could not complete (${res.status}).`; el.className = "item-status-msg err"; }
+    return;
+  }
+  await loadItems();
+}
+
+async function reopenItem(id){
+  const res = await fetch(`${TRACKER_API_BASE}/checklist-items/${id}/reopen`, {method:"POST", headers: authHeaders()});
+  if(!res.ok){
+    const detail = await res.json().catch(()=>null);
+    const el = document.getElementById(`status-${id}`);
+    if(el){ el.textContent = (detail && detail.detail) || `Could not reopen (${res.status}).`; el.className = "item-status-msg err"; }
+    return;
+  }
+  await loadItems();
+}
+
+(async function initAuth(){
+  await bootstrapTrackerKey();
+})();
+</script>
+</body>
+</html>
