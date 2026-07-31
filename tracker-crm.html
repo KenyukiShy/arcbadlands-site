@@ -25,8 +25,28 @@ body{
 .topbar h1{margin:0 0 3px; font-size:20px; letter-spacing:.3px;}
 .topbar .sub{font-size:12px; color:#cdd6e8;}
 
+/* ROLE-AWARE NAV — shown after login, one pill per role the account holds */
+.role-nav{
+  display:flex; gap:8px; padding:10px 24px; background:#152340; border-bottom:1px solid rgba(255,255,255,.08);
+}
+.role-nav.hidden{display:none;}
+.role-nav-item{
+  display:inline-block; padding:5px 12px; border-radius:14px; font-size:12.5px; font-weight:bold;
+  text-decoration:none; color:#cdd6e8; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+}
+.role-nav-item.current{color:#fff; background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.3);}
+.role-nav-item.hidden{display:none;}
+.role-nav-item[href]{cursor:pointer;}
+.role-nav-item[href]:hover{background:rgba(255,255,255,.18);}
+.moderator-only-notice{
+  background:#fff; border:2px solid var(--lgray); border-radius:10px; padding:28px 24px;
+  text-align:center; margin:18px 24px; color:#444; font-size:14px; line-height:1.6;
+}
+.moderator-only-notice.hidden{display:none;}
+
 /* LAYOUT: main area + sidebar */
 .outer{display:flex; gap:0; min-height:calc(100vh - 60px);}
+.outer.hidden{display:none;}
 .main-col{flex:1; min-width:0; padding:16px 16px 40px;}
 .sidebar{
   width:320px; min-width:300px; background:#fff; border-left:1px solid var(--lgray);
@@ -324,7 +344,26 @@ footer.note{max-width:100%; margin:30px 16px 0; padding:0; font-size:11.5px; col
   <div class="sub">Shared live status board — Kenyon, Sherrie, Doug, Charles, Cynthia. Changes save automatically across all users.</div>
 </div>
 
-<div class="outer">
+<!-- ── ROLE-AWARE NAV ── populated by applyRoleNav() after login; a user
+     with both roles sees both pills (union), never neither (login is
+     blocked before this renders unless the account has tracker and/or
+     moderator access). -->
+<div class="role-nav hidden" id="roleNav">
+  <span class="role-nav-item current hidden" id="navTracker">🛻 Tracker / CRM</span>
+  <a class="role-nav-item hidden" id="navModeration" href="admin.html" target="_blank" rel="noopener">🛡️ Content Moderation ↗</a>
+</div>
+
+<!-- ── MODERATOR-ONLY NOTICE ── shown instead of the tracker app for
+     accounts that have "moderator" but not "tracker" (admin.html isn't
+     cut over to the tracker_users role system yet, so this is a link out
+     to its existing separate password gate, not an inline embed). -->
+<div class="moderator-only-notice hidden" id="moderatorOnlyNotice">
+  Your account has moderator access but not tracker access, so there's nothing
+  from this tracker board to show you. Use the <strong>Content Moderation</strong>
+  link above to open the admin tools (separate login there for now).
+</div>
+
+<div class="outer hidden" id="outer">
 <div class="main-col">
 
   <!-- ── REGION GATE ── -->
@@ -1193,8 +1232,36 @@ function showAuthStep(id){
   document.getElementById(id).classList.add("active");
 }
 
-function hasTrackerRole(roles){
-  return Array.isArray(roles) && roles.includes("tracker");
+// Mirrors require_role()'s server-side semantics (arc-engine/api/routes/
+// tracker_accounts.py): "owner" implicitly satisfies any role check.
+function hasRole(roles, role){
+  return Array.isArray(roles) && (roles.includes("owner") || roles.includes(role));
+}
+
+function hasAnyAppRole(roles){
+  return hasRole(roles, "tracker") || hasRole(roles, "moderator");
+}
+
+// Renders the role-nav pills and decides which app surface to show. A
+// tracker (or owner) role gets the existing CRM board via boot(); a
+// moderator-only account gets a notice pointing at admin.html instead,
+// since that page isn't wired to the tracker_users role system yet — this
+// is a link out, not a section switch, until that cutover happens.
+function applyRoleNav(roles){
+  const showTracker = hasRole(roles, "tracker");
+  const showModeration = hasRole(roles, "moderator");
+  document.getElementById("roleNav").classList.remove("hidden");
+  document.getElementById("navTracker").classList.toggle("hidden", !showTracker);
+  document.getElementById("navModeration").classList.toggle("hidden", !showModeration);
+
+  if(showTracker){
+    document.getElementById("outer").classList.remove("hidden");
+    document.getElementById("moderatorOnlyNotice").classList.add("hidden");
+    boot();
+  }else{
+    document.getElementById("outer").classList.add("hidden");
+    document.getElementById("moderatorOnlyNotice").classList.remove("hidden");
+  }
 }
 
 document.getElementById("authLoginBtn").onclick = async ()=>{
@@ -1225,14 +1292,14 @@ document.getElementById("authLoginBtn").onclick = async ()=>{
       showAuthStep("authStepComplete");
       return;
     }
-    if(!hasTrackerRole(data.roles)){
-      err.textContent = "This account doesn't have tracker access.";
+    if(!hasAnyAppRole(data.roles)){
+      err.textContent = "This account doesn't have tracker or moderator access.";
       return;
     }
     currentTrackerName = name;
     currentTrackerPassword = pw;
     document.getElementById("authGate").classList.add("hidden");
-    boot();
+    applyRoleNav(data.roles);
   }catch(e){
     console.error("login error", e);
     err.textContent = "Could not reach the login server. Try again.";
@@ -1274,8 +1341,8 @@ document.getElementById("authCompleteBtn").onclick = async ()=>{
       return;
     }
     const data = await res.json();
-    if(!hasTrackerRole(data.roles)){
-      err.textContent = "This account doesn't have tracker access.";
+    if(!hasAnyAppRole(data.roles)){
+      err.textContent = "This account doesn't have tracker or moderator access.";
       return;
     }
     currentTrackerName = pendingLoginName;
@@ -1283,7 +1350,7 @@ document.getElementById("authCompleteBtn").onclick = async ()=>{
     pendingLoginName = null;
     pendingLoginPassword = null;
     document.getElementById("authGate").classList.add("hidden");
-    boot();
+    applyRoleNav(data.roles);
   }catch(e){
     console.error("complete-profile error", e);
     err.textContent = "Could not reach the server. Try again.";
