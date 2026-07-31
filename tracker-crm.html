@@ -1184,6 +1184,16 @@ function renderContacts(data){
   }
   const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const titleCase = s => s.replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
+  // Vendor contacts come back from /tracker-storage/vendor-contacts in whatever
+  // format was typed in (7018705235, 701.870.5235, +1 701-870-5235, ...) --
+  // normalize to standard US (XXX) XXX-XXXX. Leaves non-10-digit values
+  // (extensions, "Unassigned", international) untouched rather than mangling them.
+  const formatPhone = s => {
+    const digits = String(s).replace(/\D/g, "");
+    const ten = digits.length === 11 && digits[0] === "1" ? digits.slice(1) : digits;
+    if(ten.length !== 10) return s;
+    return `(${ten.slice(0,3)}) ${ten.slice(3,6)}-${ten.slice(6)}`;
+  };
   let html = '<div style="line-height:1.7;">';
   Object.entries(data).forEach(([label, val]) => {
     if(val && typeof val === "object" && !Array.isArray(val)){
@@ -1194,7 +1204,7 @@ function renderContacts(data){
         if(val.status) html += `Status: ${esc(val.status)}<br>`;
         if(val.location) html += `📍 ${esc(val.location)}<br>`;
         if(val.poc) html += `👤 ${esc(val.poc)}<br>`;
-        if(val.phone) html += `📞 ${esc(val.phone)}<br>`;
+        if(val.phone) html += `📞 ${esc(formatPhone(val.phone))}<br>`;
         if(val.email) html += `📧 ${esc(val.email)}<br>`;
         if(val.note) html += `📝 ${esc(val.note)}<br>`;
         html += "<br>";
