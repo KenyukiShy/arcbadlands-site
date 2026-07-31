@@ -44,6 +44,26 @@ body{
 }
 .moderator-only-notice.hidden{display:none;}
 
+/* FLAG FOR MODERATION — tracker-role capability, shown on each engagement
+   card; distinct from the moderator role/nav pill above. */
+.flagbtn{
+  background:#fff; color:var(--red); border:1px solid var(--red); padding:4px 10px;
+  border-radius:4px; font-size:11px; cursor:pointer; margin-top:10px;
+}
+.flagbtn:hover{background:var(--red); color:#fff;}
+.flag-form{
+  margin-top:8px; padding:10px; background:#fdf3f3; border:1px solid #e8c8c8;
+  border-radius:6px; display:none;
+}
+.flag-form.open{display:block;}
+.flag-form textarea{
+  width:100%; box-sizing:border-box; padding:6px 8px; font-size:12.5px;
+  border:1px solid #d8d8d8; border-radius:4px; margin-bottom:6px; font-family:inherit;
+}
+.flag-status{font-size:11.5px; margin-top:6px;}
+.flag-status.ok{color:#1a5c38;}
+.flag-status.err{color:var(--red);}
+
 /* LAYOUT: main area + sidebar */
 .outer{display:flex; gap:0; min-height:calc(100vh - 60px);}
 .outer.hidden{display:none;}
@@ -965,6 +985,16 @@ function buildCard(en){
           <div class="hint">Hint: date each entry, note who you spoke with, any offer number or reserve discussed, and what the next step is.</div>
         </div>
       </div>
+
+      ${hasRole(currentUserRoles, "tracker") ? `
+      <div class="flag-block">
+        <button class="flagbtn" onclick="toggleFlagForm('${en.id}')">🚩 Flag for moderation</button>
+        <div class="flag-form" id="flagForm-${en.id}">
+          <textarea id="flagReason-${en.id}" rows="2" placeholder="What needs a moderator's attention here?"></textarea>
+          <button class="ctl" onclick="submitFlag('${en.id}')">Submit report</button>
+          <div class="flag-status" id="flagStatus-${en.id}"></div>
+        </div>
+      </div>` : ''}
     </div>
   </div>`;
 }
@@ -1214,6 +1244,53 @@ async function loadContacts(name, password){
 function esc_(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 // ═══════════════════════════════════════════════════════════
+// FLAG FOR MODERATION — tracker-role capability (see require_role("tracker")
+// on POST /tracker-storage/flag-item). Reports an engagement, doesn't grant
+// or require moderator access.
+// ═══════════════════════════════════════════════════════════
+function toggleFlagForm(id){
+  document.getElementById(`flagForm-${id}`).classList.toggle("open");
+}
+
+async function submitFlag(id){
+  const en = ENGAGEMENTS.find(e=>e.id===id);
+  const reasonEl = document.getElementById(`flagReason-${id}`);
+  const statusEl = document.getElementById(`flagStatus-${id}`);
+  const reason = reasonEl.value.trim();
+  if(!reason){
+    statusEl.textContent = "Enter a reason before submitting.";
+    statusEl.className = "flag-status err";
+    return;
+  }
+  try{
+    const res = await fetch(`${TRACKER_API_BASE}/flag-item`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Tracker-Key": TRACKER_KEY,
+        "X-User-Name": currentTrackerName,
+        "X-User-Password": currentTrackerPassword
+      },
+      body: JSON.stringify({engagement_id: id, engagement_name: en ? en.name : id, reason})
+    });
+    if(!res.ok){
+      const detail = await res.json().catch(()=>null);
+      statusEl.textContent = (detail && detail.detail) || `Could not submit report (${res.status}).`;
+      statusEl.className = "flag-status err";
+      return;
+    }
+    statusEl.textContent = "✓ Reported — a moderator will review it.";
+    statusEl.className = "flag-status ok";
+    reasonEl.value = "";
+    reasonEl.disabled = true;
+  }catch(e){
+    console.error("submitFlag error", e);
+    statusEl.textContent = "Could not reach the server. Try again.";
+    statusEl.className = "flag-status err";
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // AUTH GATE
 // ═══════════════════════════════════════════════════════════
 // Kept only in memory for the session (not sessionStorage, not persisted) so
@@ -1221,6 +1298,10 @@ function esc_(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>
 // into Firestore or any other storage.
 let currentTrackerName = null;
 let currentTrackerPassword = null;
+// Set by applyRoleNav() from the /login (or /complete-profile) response.
+// Read by buildCard() to decide whether to render the "Flag for moderation"
+// button — a tracker-role capability, distinct from the moderator role/nav.
+let currentUserRoles = [];
 // Held only between a temp-password /login response and the matching
 // /complete-profile submit — complete-profile re-verifies current_password
 // server-side rather than trusting that login already succeeded.
@@ -1248,6 +1329,7 @@ function hasAnyAppRole(roles){
 // since that page isn't wired to the tracker_users role system yet — this
 // is a link out, not a section switch, until that cutover happens.
 function applyRoleNav(roles){
+  currentUserRoles = Array.isArray(roles) ? roles : [];
   const showTracker = hasRole(roles, "tracker");
   const showModeration = hasRole(roles, "moderator");
   document.getElementById("roleNav").classList.remove("hidden");
