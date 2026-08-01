@@ -38,6 +38,12 @@ body{
 .role-nav-item.hidden{display:none;}
 .role-nav-item[href]{cursor:pointer;}
 .role-nav-item[href]:hover{background:rgba(255,255,255,.18);}
+.role-nav .user-email{margin-left:auto; align-self:center; font-size:11.5px; color:#8fa3c9;}
+.role-nav .signout-btn{
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:#cdd6e8;
+  border-radius:14px; padding:5px 12px; font-size:12px; cursor:pointer;
+}
+.role-nav .signout-btn:hover{background:rgba(255,255,255,.18);}
 .moderator-only-notice{
   background:#fff; border:2px solid var(--lgray); border-radius:10px; padding:28px 24px;
   text-align:center; margin:18px 24px; color:#444; font-size:14px; line-height:1.6;
@@ -310,27 +316,30 @@ footer.note{max-width:100%; margin:30px 16px 0; padding:0; font-size:11.5px; col
 </head>
 <body>
 
-<!-- ── AUTH GATE ── -->
+<!-- ── AUTH GATE ── Firebase Auth (Google Sign-In), matching
+     arc-interface/devops-hub/index.html — see assets/firebase-auth.js
+     (window.ArcAuth). Track 5 (2026-07-31) replaced the old name+password
+     /login and /complete-profile endpoints entirely; POST /access-requests
+     is the only piece of the old flow still live server-side, so it's kept
+     here as the "no account yet" step. -->
 <div id="authGate">
   <div class="auth-box">
     <h2>🛻🏕️ AutoBäad Tracker</h2>
-    <p class="sub">Team access only. Log in to continue.</p>
+    <p class="sub">Team access only. Sign in to continue.</p>
 
-    <!-- Step 1: login -->
-    <div class="auth-step active" id="authStepLogin">
-      <input type="text" id="authLoginName" placeholder="Full name" autocomplete="username">
-      <input type="password" id="authLoginPassword" placeholder="Password" autocomplete="current-password">
-      <div class="auth-err" id="authLoginErr"></div>
-      <button id="authLoginBtn">Log In</button>
-      <p class="sub auth-link">New here? <a href="#" id="authShowRequest">Request access</a></p>
+    <!-- Step 1: sign in -->
+    <div class="auth-step active" id="authStepSignin">
+      <div class="auth-err" id="authSigninErr"></div>
+      <button id="authSigninBtn">Sign in with Google</button>
     </div>
 
-    <!-- Step 2: request access -->
+    <!-- Step 2: request access — shown automatically after Google sign-in
+         when no tracker_users doc exists for that account (GET /me 403s). -->
     <div class="auth-step" id="authStepRequest">
       <div id="authRequestForm">
-        <p class="sub">Request an account. An owner will review it and email you a temporary password.</p>
+        <p class="sub">No tracker account found for your Google account. Request access — an owner will review it and grant your Google account roles directly (no password to set).</p>
         <input type="text" id="reqName" placeholder="Full name" autocomplete="name">
-        <input type="email" id="reqEmail" placeholder="Email" autocomplete="email">
+        <input type="email" id="reqEmail" placeholder="Email" readonly>
         <input type="tel" id="reqPhone" placeholder="Phone" autocomplete="tel">
         <div class="auth-roles">
           <label style="display:block; margin-bottom:4px;"><input type="checkbox" id="reqRoleTracker" checked> Tracker access</label>
@@ -340,21 +349,9 @@ footer.note{max-width:100%; margin:30px 16px 0; padding:0; font-size:11.5px; col
         <button id="authRequestBtn">Submit Request</button>
       </div>
       <div id="authRequestSuccess" style="display:none;">
-        <p class="sub auth-success">Request submitted. You'll be emailed a temporary password once an owner approves it.</p>
+        <p class="sub auth-success">Request submitted. Once an owner approves it, just sign in again with the same Google account.</p>
       </div>
-      <p class="sub auth-link"><a href="#" id="authShowLoginFromRequest">Back to login</a></p>
-    </div>
-
-    <!-- Step 3: forced password change, first login on a temp password -->
-    <div class="auth-step" id="authStepComplete">
-      <p class="sub">First login — set your own password and confirm your contact info.</p>
-      <input type="password" id="completeNewPassword" placeholder="New password" autocomplete="new-password">
-      <input type="password" id="completeNewPassword2" placeholder="Confirm new password" autocomplete="new-password">
-      <input type="email" id="completeEmail" placeholder="Email" autocomplete="email">
-      <input type="tel" id="completePhone" placeholder="Phone" autocomplete="tel">
-      <div class="auth-err" id="authCompleteErr"></div>
-      <button id="authCompleteBtn">Set Password &amp; Enter</button>
-      <p class="sub auth-link"><a href="#" id="authShowLoginFromComplete">Back to login</a></p>
+      <p class="sub auth-link"><a href="#" id="authRequestSignOut">Not you? Sign out</a></p>
     </div>
   </div>
 </div>
@@ -371,6 +368,8 @@ footer.note{max-width:100%; margin:30px 16px 0; padding:0; font-size:11.5px; col
 <div class="role-nav hidden" id="roleNav">
   <span class="role-nav-item current hidden" id="navTracker">🛻 Tracker / CRM</span>
   <a class="role-nav-item hidden" id="navModeration" href="admin.html" target="_blank" rel="noopener">🛡️ Content Moderation ↗</a>
+  <span class="user-email" id="userInfo"></span>
+  <button class="signout-btn" id="signOutBtn">Sign out</button>
 </div>
 
 <!-- ── MODERATOR-ONLY NOTICE ── shown instead of the tracker app for
@@ -545,6 +544,7 @@ footer.note{max-width:100%; margin:30px 16px 0; padding:0; font-size:11.5px; col
 <footer class="note">AutoBäad / Arc Badlands Compute LLC liquidation tracker · Kenyon Jones, Hazen ND · Data shared across all users viewing this page.</footer>
 
 <script src="assets/site-auth.js"></script>
+<script type="module" src="assets/firebase-auth.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════
 // window.storage SHIM — this file is now hosted on GitHub Pages,
@@ -647,19 +647,19 @@ const FOLLOWUP_TYPES = [
 // ═══════════════════════════════════════════════════════════
 let ENGAGEMENTS = [];
 
-async function loadEngagements(name, password){
+async function loadEngagements(){
   const loadingEl = document.getElementById("regionGateLoading");
   const btnsEl = document.getElementById("regionBtns");
-  if(!name || !password){
-    loadingEl.innerHTML = '<p style="color:#8b1a1a;">No credentials available to load engagement data — please log in again.</p>';
+  if(!currentUser){
+    loadingEl.innerHTML = '<p style="color:#8b1a1a;">Not signed in — please sign in again.</p>';
     return;
   }
   try{
+    const idToken = await currentUser.getIdToken();
     const res = await fetch(`${TRACKER_API_BASE}/engagements`, {
       headers: {
         "X-Tracker-Key": TRACKER_KEY,
-        "X-User-Name": name,
-        "X-User-Password": password
+        "Authorization": `Bearer ${idToken}`
       }
     });
     if(res.status === 404){
@@ -1223,19 +1223,19 @@ function renderContacts(data){
   el.innerHTML = html;
 }
 
-async function loadContacts(name, password){
+async function loadContacts(){
   const el = document.getElementById("contactsContent");
   el.textContent = "Loading contacts…";
-  if(!name || !password){
-    el.innerHTML = '<p style="color:#8b1a1a;">No credentials available to load contacts — please log in again.</p>';
+  if(!currentUser){
+    el.innerHTML = '<p style="color:#8b1a1a;">Not signed in — please sign in again.</p>';
     return;
   }
   try{
+    const idToken = await currentUser.getIdToken();
     const res = await fetch(`${TRACKER_API_BASE}/vendor-contacts`, {
       headers: {
         "X-Tracker-Key": TRACKER_KEY,
-        "X-User-Name": name,
-        "X-User-Password": password
+        "Authorization": `Bearer ${idToken}`
       }
     });
     if(res.status === 404){
@@ -1274,13 +1274,13 @@ async function submitFlag(id){
     return;
   }
   try{
+    const idToken = await currentUser.getIdToken();
     const res = await fetch(`${TRACKER_API_BASE}/flag-item`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Tracker-Key": TRACKER_KEY,
-        "X-User-Name": currentTrackerName,
-        "X-User-Password": currentTrackerPassword
+        "Authorization": `Bearer ${idToken}`
       },
       body: JSON.stringify({engagement_id: id, engagement_name: en ? en.name : id, reason})
     });
@@ -1302,30 +1302,27 @@ async function submitFlag(id){
 }
 
 // ═══════════════════════════════════════════════════════════
-// AUTH GATE
+// AUTH GATE — Firebase Auth (Google Sign-In). Track 5 (2026-07-31,
+// tracker_accounts.py) replaced the old X-User-Name/X-User-Password
+// scheme with Authorization: Bearer <firebase-id-token>, verified
+// server-side on every tracker-storage data call. This mirrors
+// arc-interface/devops-hub/index.html's sign-in flow and uses the shared
+// assets/firebase-auth.js module (window.ArcAuth) rather than duplicating
+// the Firebase SDK wiring a third time.
 // ═══════════════════════════════════════════════════════════
-// Kept only in memory for the session (not sessionStorage, not persisted) so
-// boot()'s one-time vendor-contacts fetch can send it. Never written back
-// into Firestore or any other storage.
-let currentTrackerName = null;
-let currentTrackerPassword = null;
-// Set by applyRoleNav() from the /login (or /complete-profile) response.
-// Read by buildCard() to decide whether to render the "Flag for moderation"
-// button — a tracker-role capability, distinct from the moderator role/nav.
+let currentUser = null;     // Firebase user object, or null when signed out.
+// Read by buildCard() to decide whether to render the "Flag for
+// moderation" button — a tracker-role capability, distinct from the
+// moderator role/nav.
 let currentUserRoles = [];
-// Held only between a temp-password /login response and the matching
-// /complete-profile submit — complete-profile re-verifies current_password
-// server-side rather than trusting that login already succeeded.
-let pendingLoginName = null;
-let pendingLoginPassword = null;
 
 function showAuthStep(id){
   document.querySelectorAll(".auth-step").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
 
-// Mirrors require_role()'s server-side semantics (arc-engine/api/routes/
-// tracker_accounts.py): "owner" implicitly satisfies any role check.
+// Mirrors require_role()'s server-side semantics (packages/engine/src/api/
+// routes/tracker_accounts.py): "owner" implicitly satisfies any role check.
 function hasRole(roles, role){
   return Array.isArray(roles) && (roles.includes("owner") || roles.includes(role));
 }
@@ -1346,6 +1343,7 @@ function applyRoleNav(roles){
   document.getElementById("roleNav").classList.remove("hidden");
   document.getElementById("navTracker").classList.toggle("hidden", !showTracker);
   document.getElementById("navModeration").classList.toggle("hidden", !showModeration);
+  document.getElementById("userInfo").textContent = currentUser ? currentUser.email : "";
 
   if(showTracker){
     document.getElementById("outer").classList.remove("hidden");
@@ -1357,111 +1355,18 @@ function applyRoleNav(roles){
   }
 }
 
-document.getElementById("authLoginBtn").onclick = async ()=>{
-  const name = document.getElementById("authLoginName").value.trim();
-  const pw = document.getElementById("authLoginPassword").value;
-  const err = document.getElementById("authLoginErr");
-  if(!name || !pw){ err.textContent = "Enter your name and password."; return; }
-  err.textContent = "";
-  try{
-    const res = await fetch(`${TRACKER_API_BASE}/login`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json", "X-Tracker-Key": TRACKER_KEY},
-      body: JSON.stringify({name, password: pw})
-    });
-    if(!res.ok){
-      err.textContent = res.status === 401 ? "Incorrect name or password." : `Login failed (${res.status}).`;
-      return;
-    }
-    const data = await res.json();
-    if(data.must_change_password){
-      pendingLoginName = name;
-      pendingLoginPassword = pw;
-      document.getElementById("completeNewPassword").value = "";
-      document.getElementById("completeNewPassword2").value = "";
-      document.getElementById("completeEmail").value = data.email || "";
-      document.getElementById("completePhone").value = data.phone || "";
-      document.getElementById("authCompleteErr").textContent = "";
-      showAuthStep("authStepComplete");
-      return;
-    }
-    if(!hasAnyAppRole(data.roles)){
-      err.textContent = "This account doesn't have tracker or moderator access.";
-      return;
-    }
-    currentTrackerName = name;
-    currentTrackerPassword = pw;
-    document.getElementById("authGate").classList.add("hidden");
-    applyRoleNav(data.roles);
-  }catch(e){
-    console.error("login error", e);
-    err.textContent = "Could not reach the login server. Try again.";
-  }
+document.getElementById("authSigninBtn").onclick = () => {
+  document.getElementById("authSigninErr").textContent = "";
+  window.ArcAuth.signIn();
 };
 
-document.getElementById("authShowLoginFromComplete").onclick = (e)=>{
+document.getElementById("signOutBtn").onclick = () => {
+  window.ArcAuth.signOut();
+};
+
+document.getElementById("authRequestSignOut").onclick = (e) => {
   e.preventDefault();
-  pendingLoginName = null;
-  pendingLoginPassword = null;
-  document.getElementById("authLoginErr").textContent = "";
-  showAuthStep("authStepLogin");
-};
-
-document.getElementById("authCompleteBtn").onclick = async ()=>{
-  const newPw = document.getElementById("completeNewPassword").value;
-  const newPw2 = document.getElementById("completeNewPassword2").value;
-  const email = document.getElementById("completeEmail").value.trim();
-  const phone = document.getElementById("completePhone").value.trim();
-  const err = document.getElementById("authCompleteErr");
-  if(!newPw || newPw.length < 4){ err.textContent = "New password must be at least 4 characters."; return; }
-  if(newPw !== newPw2){ err.textContent = "Passwords don't match."; return; }
-  if(!email || !phone){ err.textContent = "Email and phone are both required."; return; }
-  err.textContent = "";
-  try{
-    const res = await fetch(`${TRACKER_API_BASE}/complete-profile`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json", "X-Tracker-Key": TRACKER_KEY},
-      body: JSON.stringify({
-        name: pendingLoginName,
-        current_password: pendingLoginPassword,
-        new_password: newPw,
-        email, phone
-      })
-    });
-    if(!res.ok){
-      const detail = await res.json().catch(()=>null);
-      err.textContent = (detail && detail.detail) || `Could not complete profile (${res.status}).`;
-      return;
-    }
-    const data = await res.json();
-    if(!hasAnyAppRole(data.roles)){
-      err.textContent = "This account doesn't have tracker or moderator access.";
-      return;
-    }
-    currentTrackerName = pendingLoginName;
-    currentTrackerPassword = newPw;
-    pendingLoginName = null;
-    pendingLoginPassword = null;
-    document.getElementById("authGate").classList.add("hidden");
-    applyRoleNav(data.roles);
-  }catch(e){
-    console.error("complete-profile error", e);
-    err.textContent = "Could not reach the server. Try again.";
-  }
-};
-
-document.getElementById("authShowRequest").onclick = (e)=>{
-  e.preventDefault();
-  document.getElementById("authRequestForm").style.display = "";
-  document.getElementById("authRequestSuccess").style.display = "none";
-  document.getElementById("authRequestErr").textContent = "";
-  showAuthStep("authStepRequest");
-};
-
-document.getElementById("authShowLoginFromRequest").onclick = (e)=>{
-  e.preventDefault();
-  document.getElementById("authLoginErr").textContent = "";
-  showAuthStep("authStepLogin");
+  window.ArcAuth.signOut();
 };
 
 document.getElementById("authRequestBtn").onclick = async ()=>{
@@ -1498,14 +1403,69 @@ document.getElementById("authRequestBtn").onclick = async ()=>{
 // INIT
 // ═══════════════════════════════════════════════════════════
 async function boot(){
-  await loadEngagements(currentTrackerName, currentTrackerPassword);
+  await loadEngagements();
   await loadState();
   renderAll();
-  loadContacts(currentTrackerName, currentTrackerPassword);
+  loadContacts();
 }
-(async function initAuth(){
+
+// Fires once with the current (possibly still-resolving) sign-in state and
+// again on every sign-in/sign-out — see assets/firebase-auth.js's own
+// comment on why this must run from a DOMContentLoaded listener rather
+// than at top level (module scripts are deferred; this classic script
+// isn't guaranteed to run after firebase-auth.js sets window.ArcAuth
+// otherwise).
+async function handleAuthChange(user){
+  currentUser = user;
+  if(!user){
+    currentUserRoles = [];
+    document.getElementById("roleNav").classList.add("hidden");
+    document.getElementById("outer").classList.add("hidden");
+    document.getElementById("moderatorOnlyNotice").classList.add("hidden");
+    document.getElementById("authGate").classList.remove("hidden");
+    showAuthStep("authStepSignin");
+    return;
+  }
+  try{
+    const idToken = await user.getIdToken();
+    const res = await fetch(`${TRACKER_API_BASE}/me`, {
+      headers: {"X-Tracker-Key": TRACKER_KEY, "Authorization": `Bearer ${idToken}`}
+    });
+    if(res.status === 403){
+      // Signed in with Google, but no tracker_users doc for this email yet
+      // — prefill the request-access step from the Google profile.
+      document.getElementById("reqName").value = user.displayName || "";
+      document.getElementById("reqEmail").value = user.email || "";
+      document.getElementById("reqPhone").value = "";
+      document.getElementById("authRequestForm").style.display = "";
+      document.getElementById("authRequestSuccess").style.display = "none";
+      document.getElementById("authRequestErr").textContent = "";
+      document.getElementById("authGate").classList.remove("hidden");
+      showAuthStep("authStepRequest");
+      return;
+    }
+    if(!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    if(!hasAnyAppRole(data.roles)){
+      document.getElementById("authSigninErr").textContent = "This account doesn't have tracker or moderator access.";
+      document.getElementById("authGate").classList.remove("hidden");
+      showAuthStep("authStepSignin");
+      return;
+    }
+    document.getElementById("authGate").classList.add("hidden");
+    applyRoleNav(data.roles);
+  }catch(e){
+    console.error("[tracker-crm] /me error", e);
+    document.getElementById("authSigninErr").textContent = "Could not verify your account. Try signing in again.";
+    document.getElementById("authGate").classList.remove("hidden");
+    showAuthStep("authStepSignin");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
   await bootstrapTrackerKey();
-})();
+  window.ArcAuth.onAuthChange(handleAuthChange);
+});
 </script>
 </body>
 </html>
