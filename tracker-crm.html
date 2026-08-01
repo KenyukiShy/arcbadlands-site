@@ -1060,12 +1060,13 @@ function renderSummary(items){
   const rows = items.map(en=>{
     const st = STATE[en.id];
     const phone = en.contact.match(/\(?\d{3}\)?[\s\-\.]?\d{3}[\s\-\.]?\d{4}/);
+    const phoneDisplay = phone ? phone[0] : (en.contact ? esc_(en.contact) : "—");
     return `<tr onclick="jumpTo('${en.id}')">
       <td>${en.name}</td>
       <td><span class="pill ${vehicleTagClass(en.vehicle)}">${vehicleLabel(en.vehicle)}</span></td>
       <td><span class="pill ${channelTagClass(en.channelType)}">${en.channelType}</span></td>
       <td><span class="pill ${tierTagClass(en.tier)}">${en.tier}</span></td>
-      <td>${phone ? phone[0] : "—"}</td>
+      <td>${phoneDisplay}</td>
       <td>${st.assigned}</td>
       <td><span class="statuspill ${STAGE_CLASS[st.stage]}">${st.stage}</span></td>
     </tr>`;
