@@ -198,6 +198,24 @@ table.summary tr:hover{background:var(--llgray); cursor:pointer;}
 .kv{display:grid; grid-template-columns:130px 1fr; gap:3px 8px; font-size:12.5px; margin-bottom:8px;}
 .kv div.k{font-weight:bold; color:var(--gray);}
 .kv div.v{color:#222;}
+.grouphead.deprecated{color:var(--red); border-color:var(--red);}
+.card.deprecated{opacity:.7; border-left:4px solid var(--red);}
+.card.deprecated .card-head:hover{background:var(--llgray);}
+.card.deprecated.open{opacity:1;}
+.contact-item{display:flex; gap:8px; align-items:center; margin-bottom:4px; font-size:12px;}
+.contact-item .val{flex-grow:1;}
+.contact-item .deactivate-btn{font-size:10px; cursor:pointer; color:var(--red); text-decoration:underline;}
+.contact-item.inactive{text-decoration:line-through; color:#888;}
+.contact-item.inactive .deactivate-btn{display:none;}
+.contact-add-form{margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
+.contact-add-form input, .contact-add-form select{
+  padding:4px 6px; font-size:11.5px; border:1px solid var(--lgray); border-radius:4px;
+}
+.contact-add-form button{font-size:11.5px; padding:4px 10px;}
+.deprecate-section, .restore-section{margin-top:16px; padding-top:12px; border-top:1px solid var(--llgray);}
+.deprecate-section textarea, .restore-section textarea{width:100%; box-sizing:border-box; font-family:inherit; font-size:12px; padding:6px 8px; border-radius:4px; border:1px solid var(--lgray);}
+.deprecate-section button, .restore-section button{margin-top:4px;}
+.deprecate-error, .restore-error{color:var(--red); font-size:11px; margin-top:4px;}
 h3.sec{font-size:12px; color:var(--gray); text-transform:uppercase; letter-spacing:.4px; margin:14px 0 6px; border-top:1px solid var(--llgray); padding-top:10px;}
 ul.tp{margin:0 0 4px; padding-left:18px; font-size:13px; line-height:1.5;}
 ul.tp li{margin-bottom:3px;}
@@ -423,6 +441,9 @@ footer.note{max-width:100%; margin:30px 16px 0; padding:0; font-size:11.5px; col
         <option value="Cynthia">Cynthia</option>
         <option value="Unassigned">Unassigned</option>
       </select>
+      <label style="font-size:12.5px; margin-left:10px; user-select:none; cursor:pointer;">
+        <input type="checkbox" id="showDeprecated" onchange="renderAll()" style="vertical-align:middle; margin-right:3px;"> Show Deprecated
+      </label>
       <span class="savebadge" id="saveBadge">✓ Saved</span>
     </div>
 
@@ -798,9 +819,13 @@ let currentRegion = null;
 let currentCat = null;
 
 function defaultStatus(){
-  return {assigned:"Unassigned", stage:"Not Started", followupType:"— none yet —",
+  return {
+    assigned:"Unassigned", stage:"Not Started", followupType:"— none yet —",
     contactPhone:"Unassigned", contactSms:"Unassigned", contactEmail:"Unassigned",
-    contactVoicemail:"Unassigned", notes:""};
+    contactVoicemail:"Unassigned", notes:"",
+    listing_status: "active",
+    contacts: []
+  };
 }
 
 async function loadState(){
@@ -808,7 +833,30 @@ async function loadState(){
     const res = await window.storage.get(STORAGE_KEY, true);
     if(res && res.value){ STATE = JSON.parse(res.value); }
   }catch(e){ STATE = {}; }
-  ENGAGEMENTS.forEach(en=>{ if(!STATE[en.id]) STATE[en.id] = defaultStatus(); });
+  ENGAGEMENTS.forEach(en=>{
+    if(!STATE[en.id]) {
+      STATE[en.id] = defaultStatus();
+    }
+    // One-time migration for contacts from old hardcoded field
+    if (!STATE[en.id].contacts || STATE[en.id].contacts.length === 0) {
+      if (!STATE[en.id].contacts) STATE[en.id].contacts = [];
+      if (en.contact) {
+        const existing = STATE[en.id].contacts.find(c => c.value === en.contact);
+        if (!existing) {
+          STATE[en.id].contacts.push({
+            id: 'c' + Date.now() + Math.random(),
+            type: en.contact.includes('@') ? 'email' : 'phone',
+            label: 'Primary (auto-migrated)',
+            value: en.contact,
+            active: true
+          });
+        }
+      }
+    }
+    if (!STATE[en.id].listing_status) {
+      STATE[en.id].listing_status = 'active';
+    }
+  });
 }
 
 let saveTimer = null;
@@ -826,6 +874,26 @@ function flashSaved(){
   const b = document.getElementById("saveBadge");
   b.classList.add("show");
   setTimeout(()=>b.classList.remove("show"), 1400);
+}
+
+async function logAuditEvent(logEntry) {
+  try {
+    const idToken = await window.ArcAuth.getIdToken();
+    const res = await fetch(`${TRACKER_API_BASE}/audit-log`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Tracker-Key": TRACKER_KEY,
+        "Authorization": `Bearer ${idToken}`
+      },
+      body: JSON.stringify({ entry: logEntry })
+    });
+    if (!res.ok) {
+      console.error("Failed to write audit log:", await res.text());
+    }
+  } catch (e) {
+    console.error("logAuditEvent error", e);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -929,8 +997,9 @@ function buildCard(en){
   const tpHtml = en.talkingPoints.map(t=>`<li>${t}</li>`).join("");
   const hasPreNotes = en.preNotes ? `<div class="con-pre">📌 <strong>Pre-filled context:</strong> ${en.preNotes}</div>` : "";
 
+  const isDeprecated = st.listing_status === 'deprecated';
   return `
-  <div class="card ${cardHighlightClass(en.channelType)}" id="card-${en.id}" data-vehicle="${en.vehicle}" data-assigned="${st.assigned}">
+  <div class="card ${cardHighlightClass(en.channelType)} ${isDeprecated ? 'deprecated' : ''}" id="card-${en.id}" data-vehicle="${en.vehicle}" data-assigned="${st.assigned}">
     <div class="card-head" onclick="toggleCard('${en.id}')">
       <div>
         <div class="card-title">${en.name}</div>
@@ -947,7 +1016,6 @@ function buildCard(en){
     <div class="card-body">
       <div class="kv">
         ${en.description ? `<div class="k">Description</div><div class="v">${en.description}</div>` : ''}
-        <div class="k">Contact</div><div class="v">${en.contact}</div>
         <div class="k">Address</div><div class="v">${en.address}</div>
         <div class="k">Type</div><div class="v">${en.type}</div>
         ${en.asset_ids ? `<div class="k">Asset IDs</div><div class="v">${Array.isArray(en.asset_ids) ? en.asset_ids.join(', ') : en.asset_ids}</div>` : ''}
@@ -957,6 +1025,20 @@ function buildCard(en){
 
       <h3 class="sec">Talking Points</h3>
       <ul class="tp">${tpHtml}</ul>
+
+      <h3 class="sec">Contacts</h3>
+      <div id="contacts-list-${en.id}">
+        <!-- contact items will be rendered here by renderContactList -->
+      </div>
+      <div class="contact-add-form">
+        <input type="text" id="newContactLabel-${en.id}" placeholder="Label (e.g. 'Sales Mgr')" style="flex-grow:1;">
+        <input type="text" id="newContactValue-${en.id}" placeholder="Phone or Email" style="flex-grow:2;">
+        <select id="newContactType-${en.id}">
+          <option value="phone">Phone</option>
+          <option value="email">Email</option>
+        </select>
+        <button class="ctl alt" onclick="addContact('${en.id}')">Add</button>
+      </div>
 
       <h3 class="sec">SMS — Copy &amp; Paste</h3>
       <div class="smsbox">
@@ -1015,6 +1097,32 @@ function buildCard(en){
           <div class="flag-status" id="flagStatus-${en.id}"></div>
         </div>
       </div>` : ''}
+
+      ${hasRole(currentUserRoles, "tracker") ? (st.listing_status === 'active' ? `
+      <div class="deprecate-section">
+        <h3 class="sec" style="color:var(--red); border:none; padding-top:0; margin-top:16px;">Deprecate Engagement</h3>
+        <div class="field">
+          <label for="deprecateReason-${en.id}">Reason for deprecation (required)</label>
+          <textarea id="deprecateReason-${en.id}" rows="2" placeholder="e.g., Dealer closed, no longer in business."></textarea>
+          <button class="ctl" style="background:var(--red);" onclick="deprecateEngagement('${en.id}')">Deprecate</button>
+          <div class="deprecate-error" id="deprecateError-${en.id}"></div>
+        </div>
+      </div>
+      ` : `
+      <div class="restore-section">
+        <h3 class="sec" style="color:var(--green); border:none; padding-top:0; margin-top:16px;">Engagement Deprecated</h3>
+        <div style="font-size:12px; margin-bottom:10px;">
+          Deprecated by <strong>${st.deprecated_by || 'N/A'}</strong> on ${st.deprecated_at ? new Date(st.deprecated_at).toLocaleDateString() : 'N/A'}<br>
+          <em>Reason: ${esc_(st.deprecation_reason || 'No reason given.')}</em>
+        </div>
+        <div class="field">
+          <label for="restoreReason-${en.id}">Reason for restoration (required)</label>
+          <textarea id="restoreReason-${en.id}" rows="2" placeholder="e.g., Mistake, dealer reopened under new name."></textarea>
+          <button class="ctl" style="background:var(--green);" onclick="restoreEngagement('${en.id}')">Restore</button>
+          <div class="restore-error" id="restoreError-${en.id}"></div>
+        </div>
+      </div>
+      `) : ''}
     </div>
   </div>`;
 }
@@ -1023,9 +1131,118 @@ function groupHeading(label, cls){
   return `<div class="grouphead ${cls||""}">${label}</div>`;
 }
 
+function renderContactList(enId){
+  const st = STATE[enId];
+  const container = document.getElementById(`contacts-list-${enId}`);
+  if(!container || !st.contacts) return;
+  container.innerHTML = st.contacts.map(c => `
+    <div class="contact-item ${c.active ? '' : 'inactive'}">
+      <span class="lbl"><strong>${esc_(c.label || c.type)}:</strong></span>
+      <span class="val">${esc_(c.value)}</span>
+      ${c.active ? `<a href="#" class="deactivate-btn" onclick="event.preventDefault(); deactivateContact('${enId}', '${c.id}')">deactivate</a>` : '(deactivated)'}
+    </div>
+  `).join('');
+}
+
+async function addContact(enId){
+  const en = ENGAGEMENTS.find(e => e.id === enId);
+  const labelEl = document.getElementById(`newContactLabel-${enId}`);
+  const valueEl = document.getElementById(`newContactValue-${enId}`);
+  const typeEl = document.getElementById(`newContactType-${enId}`);
+
+  const label = labelEl.value.trim();
+  const value = valueEl.value.trim();
+  const type = typeEl.value;
+
+  if(!value){
+    alert("Contact phone or email value is required.");
+    return;
+  }
+
+  const newContact = {
+    id: 'c' + Date.now() + Math.random(),
+    type: type,
+    label: label || (type === 'phone' ? 'Phone' : 'Email'),
+    value: value,
+    active: true
+  };
+
+  STATE[enId].contacts.push(newContact);
+  await logAuditEvent(`${new Date().toISOString()} | agent:${currentUserName} | ${en.name} | added contact | label: ${newContact.label}, value: ${newContact.value}`);
+  saveState();
+  renderContactList(enId);
+
+  labelEl.value = "";
+  valueEl.value = "";
+}
+
+async function deactivateContact(enId, contactId){
+  if(!confirm("Are you sure you want to deactivate this contact? This is a soft-delete and can only be reversed by re-adding the contact manually.")) return;
+  const en = ENGAGEMENTS.find(e => e.id === enId);
+  const contact = STATE[enId].contacts.find(c => c.id === contactId);
+  if(contact){
+    contact.active = false;
+    await logAuditEvent(`${new Date().toISOString()} | agent:${currentUserName} | ${en.name} | deactivated contact | label: ${contact.label}, value: ${contact.value}`);
+    saveState();
+    renderContactList(enId);
+  }
+}
+
+async function deprecateEngagement(enId){
+  const en = ENGAGEMENTS.find(e => e.id === enId);
+  const reasonEl = document.getElementById(`deprecateReason-${enId}`);
+  const errorEl = document.getElementById(`deprecateError-${enId}`);
+  const reason = reasonEl.value.trim();
+
+  if(!reason){
+    errorEl.textContent = "A reason is required to deprecate.";
+    return;
+  }
+  errorEl.textContent = "";
+
+  const st = STATE[enId];
+  st.listing_status = 'deprecated';
+  st.deprecation_reason = reason;
+  st.deprecated_by = currentUserName;
+  st.deprecated_at = new Date().toISOString();
+
+  await logAuditEvent(`${st.deprecated_at} | agent:${currentUserName} | ${en.name} | deprecated listing | reason: ${reason}`);
+  saveState();
+  renderAll();
+}
+
+async function restoreEngagement(enId){
+  const en = ENGAGEMENTS.find(e => e.id === enId);
+  const reasonEl = document.getElementById(`restoreReason-${enId}`);
+  const errorEl = document.getElementById(`restoreError-${enId}`);
+  const reason = reasonEl.value.trim();
+
+  if(!reason){
+    errorEl.textContent = "A reason is required to restore.";
+    return;
+  }
+  errorEl.textContent = "";
+
+  const st = STATE[enId];
+  st.listing_status = 'active';
+  st.restored_reason = reason;
+  st.restored_by = currentUserName;
+  st.restored_at = new Date().toISOString();
+
+  await logAuditEvent(`${st.restored_at} | agent:${currentUserName} | ${en.name} | restored listing | reason: ${reason}`);
+  saveState();
+  renderAll();
+}
+
 function getVisibleEngagements(){
   if(!currentRegion || !currentCat) return [];
+  const showDeprecated = document.getElementById("showDeprecated").checked;
+
   return ENGAGEMENTS.filter(en => {
+    const st = STATE[en.id];
+    if (!st) return false; // Should not happen after loadState
+    if (st.listing_status === 'deprecated' && !showDeprecated) return false;
+
     if(en.region !== currentRegion) return false;
     if(currentCat === "all") return true;
     // vehicle filter
@@ -1047,6 +1264,9 @@ function renderAll(){
   const visible = getVisibleEngagements();
   const filteredByPerson = visible.filter(en => aFilter === "all" || STATE[en.id].assigned === aFilter);
 
+  const activeItems = filteredByPerson.filter(en => STATE[en.id].listing_status !== 'deprecated');
+  const deprecatedItems = filteredByPerson.filter(en => STATE[en.id].listing_status === 'deprecated');
+
   // Group by vehicle
   const groups = currentRegion === "nd"
     ? [{key:"towncar",label:"🚗 1988 Town Car Signature — ND Region",cls:"nd"},{key:"mkz",label:"🚙 2016 MKZ Hybrid — ND Region",cls:"nd"}]
@@ -1054,7 +1274,7 @@ function renderAll(){
 
   let html = "";
   groups.forEach(g=>{
-    const items = filteredByPerson.filter(en => en.vehicle === g.key);
+    const items = activeItems.filter(en => en.vehicle === g.key);
     if(items.length === 0) return;
     html += groupHeading(g.label, g.cls);
     // Sort: Tier 1, Tier 2, Tier 3, Self-Submit
@@ -1063,10 +1283,25 @@ function renderAll(){
     items.forEach(en => html += buildCard(en));
   });
 
+  if (deprecatedItems.length > 0) {
+    html += groupHeading("🚫 Deprecated Engagements", "deprecated");
+    deprecatedItems.sort((a,b) => (STATE[b.id].deprecated_at || 0) - (STATE[a.id].deprecated_at || 0));
+    deprecatedItems.forEach(en => html += buildCard(en));
+  }
+
   document.getElementById("cardsContainer").innerHTML = html || "<p style='color:#888;font-size:13px;'>No engagements match current filters.</p>";
-  if(openCard){
+  if(openCard === "__ALL__"){
+    document.querySelectorAll(".card").forEach(c => {
+      c.classList.add("open");
+      const id = c.id.replace('card-','');
+      renderContactList(id);
+    });
+  } else if(openCard){
     const el = document.getElementById("card-"+openCard);
-    if(el) el.classList.add("open");
+    if(el) {
+      el.classList.add("open");
+      renderContactList(openCard);
+    }
   }
 
   // Update sidebar vehicles for current context
@@ -1077,10 +1312,12 @@ function renderAll(){
 
 function renderSummary(items){
   if(!items) items = getVisibleEngagements();
-  const rows = items.map(en=>{
+  const activeItems = items.filter(en => STATE[en.id].listing_status !== 'deprecated');
+
+  const rows = activeItems.map(en=>{
     const st = STATE[en.id];
-    const phone = en.contact.match(/\(?\d{3}\)?[\s\-\.]?\d{3}[\s\-\.]?\d{4}/);
-    const phoneDisplay = phone ? phone[0] : (en.contact ? esc_(en.contact) : "—");
+    const phoneContact = st.contacts?.find(c => c.active && c.type === 'phone');
+    const phoneDisplay = phoneContact ? esc_(phoneContact.value) : "—";
     return `<tr onclick="jumpTo('${en.id}')">
       <td>${en.name}</td>
       <td><span class="pill ${vehicleTagClass(en.vehicle)}">${vehicleLabel(en.vehicle)}</span></td>
@@ -1259,6 +1496,7 @@ window.toggleCard = function(id){
   if(!isOpen){
     el.classList.add("open");
     openCard = id;
+    renderContactList(id);
     // Update sidebar to highlight relevant vehicles for this card
     const en = ENGAGEMENTS.find(e=>e.id===id);
     if(en) updateSidebar([en.vehicle]);
@@ -1284,7 +1522,11 @@ window.copySms = function(id){
 
 document.getElementById("expandAllBtn").onclick = ()=>{
   openCard = "__ALL__";
-  document.querySelectorAll(".card").forEach(c=>c.classList.add("open"));
+  document.querySelectorAll(".card").forEach(c=>{
+    c.classList.add("open");
+    const id = c.id.replace('card-','');
+    renderContactList(id);
+  });
 };
 document.getElementById("collapseAllBtn").onclick = ()=>{
   openCard = null;
