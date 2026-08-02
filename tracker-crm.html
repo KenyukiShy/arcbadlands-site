@@ -586,7 +586,8 @@ footer.note{max-width:100%; margin:30px 16px 0; padding:0; font-size:11.5px; col
 
 <script src="assets/site-auth.js"></script>
 <script type="module" src="assets/firebase-auth.js"></script>
-<script>
+<script type="module">
+import { createTrackerRepository } from './assets/tracker-repository.js';
 // ═══════════════════════════════════════════════════════════
 // window.storage SHIM — this file is now hosted on GitHub Pages,
 // not run as a Claude Artifact, so the real window.storage API
@@ -597,49 +598,17 @@ footer.note{max-width:100%; margin:30px 16px 0; padding:0; font-size:11.5px; col
 // literal, so a future Cloud Run URL change is a one-file edit.
 // ═══════════════════════════════════════════════════════════
 const TRACKER_API_BASE = SiteAuth.getApiBase() + "/tracker-storage";
-
-// Shared key gating tracker-storage's endpoints (see arc-engine's
-// tracker_storage.py). Fetched from the unauthenticated /client-key
-// bootstrap endpoint rather than hardcoded here — this repo is public,
-// so a literal key value in this file would sit in git history forever.
-// The bootstrap endpoint doesn't add real access control (anyone who can
-// call it can call every other tracker-storage route just as easily) —
-// its only job is keeping the actual key value out of this committed file
-// so it can be rotated without a site redeploy. Resolved once at load
-// time by bootstrapTrackerKey(), kept in memory only (not sessionStorage).
-let TRACKER_KEY = null;
-
-async function bootstrapTrackerKey(){
-  try{
-    const res = await fetch(`${TRACKER_API_BASE}/client-key`);
-    if(!res.ok) throw new Error(`client-key fetch failed: ${res.status}`);
-    const data = await res.json();
-    TRACKER_KEY = data.key;
-  }catch(e){
-    console.error("bootstrapTrackerKey error", e);
-  }
-}
+const trackerRepo = createTrackerRepository(TRACKER_API_BASE);
 
 window.storage = {
   async get(key, shared){
     try{
-      const res = await fetch(`${TRACKER_API_BASE}/${encodeURIComponent(key)}`, {
-        headers: {"X-Tracker-Key": TRACKER_KEY}
-      });
-      if(res.status === 404) return null;
-      if(!res.ok) throw new Error(`storage.get failed: ${res.status}`);
-      return await res.json();
+      return await trackerRepo.getStorage(key);
     }catch(e){ console.error("storage.get error", e); return null; }
   },
   async set(key, value, shared){
     try{
-      const res = await fetch(`${TRACKER_API_BASE}/${encodeURIComponent(key)}`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json", "X-Tracker-Key": TRACKER_KEY},
-        body: JSON.stringify({value})
-      });
-      if(!res.ok) throw new Error(`storage.set failed: ${res.status}`);
-      return await res.json();
+      return await trackerRepo.setStorage(key, value);
     }catch(e){ console.error("storage.set error", e); return null; }
   }
 };
@@ -697,20 +666,7 @@ async function loadEngagements(){
   }
   try{
     const idToken = await currentUser.getIdToken();
-    const res = await fetch(`${TRACKER_API_BASE}/engagements`, {
-      headers: {
-        "X-Tracker-Key": TRACKER_KEY,
-        "Authorization": `Bearer ${idToken}`
-      }
-    });
-    if(res.status === 404){
-      loadingEl.innerHTML = '<p style="color:#888;">Engagements endpoint isn\'t deployed yet — check /tracker-storage/engagements on commplex-api.</p>';
-      return;
-    }
-    if(!res.ok){
-      throw new Error(`${res.status}: ${await res.text()}`);
-    }
-    const data = await res.json();
+    const data = await trackerRepo.getEngagements(idToken);
     if(!Array.isArray(data)) throw new Error("expected an array of engagements");
     ENGAGEMENTS = data;
     loadingEl.style.display = "none";
@@ -879,18 +835,7 @@ function flashSaved(){
 async function logAuditEvent(logEntry) {
   try {
     const idToken = await window.ArcAuth.getIdToken();
-    const res = await fetch(`${TRACKER_API_BASE}/audit-log`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Tracker-Key": TRACKER_KEY,
-        "Authorization": `Bearer ${idToken}`
-      },
-      body: JSON.stringify({ entry: logEntry })
-    });
-    if (!res.ok) {
-      console.error("Failed to write audit log:", await res.text());
-    }
+    await trackerRepo.logAuditEvent(idToken, logEntry);
   } catch (e) {
     console.error("logAuditEvent error", e);
   }
@@ -1417,11 +1362,7 @@ async function loadItinerary(){
 
   try{
     const idToken = await window.ArcAuth.getIdToken();
-    const res = await fetch(`${TRACKER_API_BASE}/itinerary/${encodeURIComponent(agent)}`, {
-      headers: {"X-Tracker-Key": TRACKER_KEY, "Authorization": `Bearer ${idToken}`}
-    });
-    if(!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
-    const data = await res.json();
+    const data = await trackerRepo.getItinerary(idToken, agent);
 
     const isSelf = agent === currentUserName;
     if(data.account_status !== "connected"){
@@ -1464,12 +1405,7 @@ async function connectMyCalendar(){
   statusEl.textContent = "Redirecting to Google…";
   try{
     const idToken = await window.ArcAuth.getIdToken();
-    const res = await fetch(`${TRACKER_API_BASE}/me/calendar/connect`, {
-      method: "POST",
-      headers: {"X-Tracker-Key": TRACKER_KEY, "Authorization": `Bearer ${idToken}`}
-    });
-    if(!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
-    const data = await res.json();
+    const data = await trackerRepo.getCalendarConnectUrl(idToken);
     window.location.href = data.auth_url;
   }catch(e){
     console.error("[tracker-crm] connect error", e);
@@ -1595,20 +1531,7 @@ async function loadContacts(){
   }
   try{
     const idToken = await currentUser.getIdToken();
-    const res = await fetch(`${TRACKER_API_BASE}/vendor-contacts`, {
-      headers: {
-        "X-Tracker-Key": TRACKER_KEY,
-        "Authorization": `Bearer ${idToken}`
-      }
-    });
-    if(res.status === 404){
-      el.innerHTML = '<p style="color:#888;">Vendor contacts endpoint isn\'t deployed yet — check /tracker-storage/vendor-contacts on commplex-api.</p>';
-      return;
-    }
-    if(!res.ok){
-      throw new Error(`${res.status}: ${await res.text()}`);
-    }
-    const data = await res.json();
+    const data = await trackerRepo.getVendorContacts(idToken);
     renderContacts(data);
   }catch(e){
     console.error("loadContacts error", e);
@@ -1638,28 +1561,14 @@ async function submitFlag(id){
   }
   try{
     const idToken = await currentUser.getIdToken();
-    const res = await fetch(`${TRACKER_API_BASE}/flag-item`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Tracker-Key": TRACKER_KEY,
-        "Authorization": `Bearer ${idToken}`
-      },
-      body: JSON.stringify({engagement_id: id, engagement_name: en ? en.name : id, reason})
-    });
-    if(!res.ok){
-      const detail = await res.json().catch(()=>null);
-      statusEl.textContent = (detail && detail.detail) || `Could not submit report (${res.status}).`;
-      statusEl.className = "flag-status err";
-      return;
-    }
+    await trackerRepo.flagItem(idToken, {engagement_id: id, engagement_name: en ? en.name : id, reason});
     statusEl.textContent = "✓ Reported — a moderator will review it.";
     statusEl.className = "flag-status ok";
     reasonEl.value = "";
     reasonEl.disabled = true;
   }catch(e){
     console.error("submitFlag error", e);
-    statusEl.textContent = "Could not reach the server. Try again.";
+    statusEl.textContent = e.message || "Could not reach the server. Try again.";
     statusEl.className = "flag-status err";
   }
 }
@@ -1745,21 +1654,12 @@ document.getElementById("authRequestBtn").onclick = async ()=>{
   if(!roles_requested.length){ err.textContent = "Select at least one access type."; return; }
   err.textContent = "";
   try{
-    const res = await fetch(`${TRACKER_API_BASE}/access-requests`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json", "X-Tracker-Key": TRACKER_KEY},
-      body: JSON.stringify({name, email, phone, roles_requested})
-    });
-    if(!res.ok){
-      const detail = await res.json().catch(()=>null);
-      err.textContent = (detail && detail.detail) || `Request failed (${res.status}).`;
-      return;
-    }
+    await trackerRepo.requestAccess({name, email, phone, roles_requested});
     document.getElementById("authRequestForm").style.display = "none";
     document.getElementById("authRequestSuccess").style.display = "";
   }catch(e){
     console.error("access request error", e);
-    err.textContent = "Could not reach the server. Try again.";
+    err.textContent = e.message || "Could not reach the server. Try again.";
   }
 };
 
@@ -1792,10 +1692,8 @@ async function handleAuthChange(user){
   }
   try{
     const idToken = await user.getIdToken();
-    const res = await fetch(`${TRACKER_API_BASE}/me`, {
-      headers: {"X-Tracker-Key": TRACKER_KEY, "Authorization": `Bearer ${idToken}`}
-    });
-    if(res.status === 403){
+    const { status, data } = await trackerRepo.getMe(idToken);
+    if(status === 403){
       // Signed in with Google, but no tracker_users doc for this email yet
       // — prefill the request-access step from the Google profile.
       document.getElementById("reqName").value = user.displayName || "";
@@ -1808,8 +1706,7 @@ async function handleAuthChange(user){
       showAuthStep("authStepRequest");
       return;
     }
-    if(!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
-    const data = await res.json();
+    // The repo's getMe throws on non-403 errors, so no need for !res.ok check here.
     if(!hasAnyAppRole(data.roles)){
       document.getElementById("authSigninErr").textContent = "This account doesn't have tracker or moderator access.";
       document.getElementById("authGate").classList.remove("hidden");
@@ -1829,8 +1726,15 @@ async function handleAuthChange(user){
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await bootstrapTrackerKey();
-  window.ArcAuth.onAuthChange(handleAuthChange);
+  try {
+    await trackerRepo.bootstrapKey();
+    window.ArcAuth.onAuthChange(handleAuthChange);
+  } catch (e) {
+    document.body.innerHTML = `<div style="padding:20px;font-family:sans-serif;color:#8b1a1a;">
+      <h2>Fatal Error</h2>
+      <p>Could not initialize tracker application: ${e.message}. The API may be down.</p>
+    </div>`;
+  }
 });
 </script>
 </body>
