@@ -322,7 +322,7 @@ footer p{font-size:11px;font-family:'DM Mono',monospace;}
 
 <footer>
   <div class="brand">Auto<span>Bäad</span> · Arc Badlands</div>
-  <p>Hazen ND 58545 · (866) 736-2349 · kjonesmle@gmail.com</p>
+  <p>Hazen ND 58545 · (701) 951-8490 · (866) 736-2349 · kjonesmle@gmail.com</p>
   <p>© 2026 Arc Badlands Compute LLC</p>
 </footer>
 
@@ -374,13 +374,13 @@ async function callAudry(text) {
     });
     const data = await res.json();
     setTyping(false);
-    const reply = data.reply || "I'm having trouble connecting. Please text (701) 870-5235.";
+    const reply = data.reply || "I'm having trouble connecting. Please text (701) 951-8490.";
     history.push({ role: 'assistant', content: reply });
     addMsg(reply, 'audry');
   } catch (e) {
     setTyping(false);
     console.error('Fetch error:', e);
-    addMsg("Connection issue. Please call or text (701) 870-5235 or (701) 951-8490.", 'audry');
+    addMsg("Connection issue. Please call or text (701) 951-8490, (701) 870-5235, or (701) 748-2341.", 'audry');
   } finally {
     isLoading = false;
     if (btn) btn.disabled = false;

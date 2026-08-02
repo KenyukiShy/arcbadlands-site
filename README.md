@@ -19,4 +19,4 @@ GitHub Pages — deploy from `main` branch, root `/`.
 
 ## Contact
 
-kjones@shy2shy.com · (701) 870-5235 · Hazen, ND 58545
+kjones@shy2shy.com · (701) 951-8490 · Hazen, ND 58545
